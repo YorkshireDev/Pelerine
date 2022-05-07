@@ -32,6 +32,6 @@ class ControllerDatabase:
 
         return self.MODEL_DATABASE.login(username, password)
 
-    def register(self, username: str, password: str, public_key: str, private_key: str):
+    def register(self, username: str, password: str, public_key: str, private_key: str, exchange_name: str, coin_pair: str):
 
-        self.MODEL_DATABASE.register(username, password, public_key, private_key)
+        self.MODEL_DATABASE.register(username, password, public_key, private_key, exchange_name, coin_pair)

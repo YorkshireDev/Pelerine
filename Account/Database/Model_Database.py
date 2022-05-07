@@ -23,7 +23,9 @@ class ModelDatabase:
                  username text NOT NULL,
                  password text NOT NULL,
                  public_key text NOT NULL,
-                 private_key text NOT NULL
+                 private_key text NOT NULL,
+                 exchange_name text NOT NULL,
+                 coin_pair text NOT NULL
                  ); """
 
                 cursor = self.CONNECTION.cursor()
@@ -48,7 +50,7 @@ class ModelDatabase:
 
     def login(self, username: str, password: str) -> list:
 
-        query = """ SELECT password,public_key,private_key FROM users WHERE username=? """
+        query = """ SELECT password,public_key,private_key,exchange_name,coin_pair FROM users WHERE username=? """
 
         try:
 
@@ -58,16 +60,16 @@ class ModelDatabase:
             request = cursor.fetchone()
 
             if self.CONTROLLER_DATABASE.verify_hash(request[0], password):
-                return [request[1], self.CONTROLLER_DATABASE.decrypt_secret(request[2], password)]
+                return [request[1], self.CONTROLLER_DATABASE.decrypt_secret(request[2], password), request[3], request[4]]
             else:
                 return []
 
         except Error as error:
             print(str(error))
 
-    def register(self, username: str, password: str, public_key: str, private_key: str):
+    def register(self, username: str, password: str, public_key: str, private_key: str, exchange_name: str, coin_pair: str):
 
-        query = """ INSERT INTO users(username,password,public_key,private_key) VALUES(?,?,?,?) """
+        query = """ INSERT INTO users(username,password,public_key,private_key,exchange_name,coin_pair) VALUES(?,?,?,?,?,?) """
 
         try:
 
@@ -75,7 +77,9 @@ class ModelDatabase:
             cursor.execute(query, (username,
                                    self.CONTROLLER_DATABASE.get_hash(password),
                                    public_key,
-                                   self.CONTROLLER_DATABASE.encrypt_secret(private_key, password)))
+                                   self.CONTROLLER_DATABASE.encrypt_secret(private_key, password),
+                                   exchange_name,
+                                   coin_pair,))
 
             self.CONNECTION.commit()
 
