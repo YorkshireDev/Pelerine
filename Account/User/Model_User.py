@@ -9,19 +9,19 @@ class ModelUser:
 
         self.balance: list = [0.0, 0.0]
 
-    def get_username(self):
+    def get_username(self) -> str:
 
         return self.USERNAME
 
-    def get_exchange_name(self):
+    def get_exchange_name(self) -> str:
 
         return self.EXCHANGE_NAME
 
-    def get_coin_pair(self):
+    def get_coin_pair(self) -> str:
 
         return self.COIN_PAIR
 
-    def is_live_trading(self):
+    def is_live_trading(self) -> bool:
 
         return self.LIVE_TRADING
 
