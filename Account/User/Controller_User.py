@@ -27,6 +27,6 @@ class ControllerUser:
 
         return self.MODEL_USER.get_balance()
 
-    def update_balance(self, base: int, quote: int):
+    def update_balance(self, base: float, quote: float):
 
         self.MODEL_USER.update_balance(base, quote)

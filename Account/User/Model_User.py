@@ -29,7 +29,7 @@ class ModelUser:
 
         return self.balance
 
-    def update_balance(self, base: int, quote: int):
+    def update_balance(self, base: float, quote: float):
 
         self.balance[0] = base
         self.balance[1] = quote
