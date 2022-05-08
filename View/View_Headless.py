@@ -1,6 +1,6 @@
-from Account.Database import Controller_Database
 from getpass import getpass as secret_input
 
+from Account.Database import Controller_Database
 from Account.User import Controller_User
 
 
