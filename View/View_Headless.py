@@ -19,6 +19,10 @@ async def login_or_register(event_loop) -> dict:
 
         user_information = controller_database.login(username, password)
 
+        if len(user_information) == 0:
+            print("Error -> Wrong Password Provided!")
+            sys_exit()
+
         public_key: str = user_information[0]
         private_key: str = user_information[1]
         exchange_name = user_information[2]
