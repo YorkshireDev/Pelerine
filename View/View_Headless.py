@@ -18,6 +18,8 @@ async def login_or_register(event_loop) -> dict:
     password: str = secret_input("Password: ")
     initial_balance: list = [0.0, 0.0]
 
+    registering: bool = False
+
     if controller_database.user_exists(username):  # Login
 
         user_information = controller_database.login(username, password)
@@ -42,6 +44,8 @@ async def login_or_register(event_loop) -> dict:
         live_trading = public_key != "N/A"
 
     else:  # Register
+
+        registering = True
 
         exchange_name = str(input("Exchange: ")).upper()
         coin_pair = str(input("Coin Pair: ")).upper()
@@ -85,7 +89,8 @@ async def login_or_register(event_loop) -> dict:
         await controller_exchange_middleware.close_exchange()
         sys_exit()
 
-    controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
+    if registering:
+        controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
 
     del public_key
     del private_key
