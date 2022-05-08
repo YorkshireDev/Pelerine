@@ -1,4 +1,6 @@
 from getpass import getpass as secret_input
+from ccxt.async_support import exchanges
+from sys import exit as sys_exit
 
 from Account.Database import Controller_Database
 from Account.User import Controller_User
@@ -54,10 +56,12 @@ def login_or_register(event_loop) -> dict:
             public_key: str = str(input("Public Key: "))
             private_key: str = secret_input("Private Key: ")
 
-        controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
-
     controller_user: Controller_User = Controller_User.ControllerUser(username, exchange_name, coin_pair, live_trading)
     controller_user.update_balance(initial_balance[0], initial_balance[1])
+
+    if exchange_name not in exchanges:
+        print("Error -> " + exchange_name + " does not exist in CCXT!")
+        sys_exit()
 
     controller_exchange_middleware: Controller_Exchange_Middleware = Controller_Exchange_Middleware.ControllerExchangeMiddleware(USER=controller_user,
                                                                                                                                  LIVE_TRADING=live_trading,
@@ -66,6 +70,13 @@ def login_or_register(event_loop) -> dict:
                                                                                                                                  PUBLIC_KEY=public_key,
                                                                                                                                  PRIVATE_KEY=private_key,
                                                                                                                                  EVENT_LOOP=event_loop)
+
+    if not controller_exchange_middleware.load_markets():
+        print("Error -> " + coin_pair + " does not exist in " + exchange_name)
+        sys_exit()
+
+    controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
+
     return {"USER": controller_user, "EXCHANGE": controller_exchange_middleware}
 
 
