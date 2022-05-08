@@ -7,7 +7,7 @@ from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
 
 
-def login_or_register(event_loop) -> dict:
+async def login_or_register(event_loop) -> dict:
 
     controller_database: Controller_Database = Controller_Database.ControllerDatabase()
 
@@ -59,7 +59,7 @@ def login_or_register(event_loop) -> dict:
     controller_user: Controller_User = Controller_User.ControllerUser(username, exchange_name, coin_pair, live_trading)
     controller_user.update_balance(initial_balance[0], initial_balance[1])
 
-    if exchange_name not in exchanges:
+    if exchange_name.lower() not in exchanges:
         print("Error -> " + exchange_name + " does not exist in CCXT!")
         sys_exit()
 
@@ -71,8 +71,11 @@ def login_or_register(event_loop) -> dict:
                                                                                                                                  PRIVATE_KEY=private_key,
                                                                                                                                  EVENT_LOOP=event_loop)
 
-    if not controller_exchange_middleware.load_markets():
+    coin_pair_exists: bool = await controller_exchange_middleware.load_markets()
+
+    if not coin_pair_exists:
         print("Error -> " + coin_pair + " does not exist in " + exchange_name)
+        await controller_exchange_middleware.close_exchange()
         sys_exit()
 
     controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
@@ -84,9 +87,8 @@ async def main(event_loop):
 
     print()
 
-    current_session = login_or_register(event_loop)
+    current_session = await login_or_register(event_loop)
 
-    await current_session["EXCHANGE"].load_markets()
     await current_session["EXCHANGE"].update_balance()
     print("Current Price: " + str(await current_session["EXCHANGE"].get_current_price()))
 
