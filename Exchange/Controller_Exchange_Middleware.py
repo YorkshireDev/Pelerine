@@ -11,9 +11,9 @@ class ControllerExchangeMiddleware:
 
         return await self.MODEL_EXCHANGE_MIDDLEWARE.load_markets()
 
-    async def get_balance(self):
+    async def update_balance(self):
 
-        await self.MODEL_EXCHANGE_MIDDLEWARE.get_balance()
+        await self.MODEL_EXCHANGE_MIDDLEWARE.update_balance()
 
     async def get_current_price(self) -> float:
 

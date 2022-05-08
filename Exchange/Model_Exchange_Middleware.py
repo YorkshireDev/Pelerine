@@ -39,7 +39,7 @@ class ModelExchangeMiddleware:
         await self.__process_request(0)
         return self.COIN_PAIR in self.EXCHANGE.symbols
 
-    async def get_balance(self):
+    async def update_balance(self):
 
         await self.__process_request(1)
 
@@ -62,6 +62,7 @@ class ModelExchangeMiddleware:
 
         connection_error_count = 0
         connection_wait_length_multiplier = 1
+        pause_length = self.EXCHANGE.rateLimit * 0.001
 
         while not connection_successful:
 
@@ -82,7 +83,8 @@ class ModelExchangeMiddleware:
 
                             coin_pair_split = self.COIN_PAIR.split("/")
 
-                            account_balances: dict = await self.EXCHANGE.fetch_balance()["total"]
+                            account_balances: dict = await self.EXCHANGE.fetch_balance()
+                            account_balances = account_balances["total"]
 
                             if coin_pair_split[0] in account_balances:
                                 base = float(account_balances[coin_pair_split[0]])
@@ -99,7 +101,8 @@ class ModelExchangeMiddleware:
 
                     case 2:
 
-                        self.current_price = float(await self.EXCHANGE.fetch_ticker(self.COIN_PAIR)["last"])
+                        temp_current_price = await self.EXCHANGE.fetch_ticker(self.COIN_PAIR)
+                        self.current_price = float(temp_current_price["last"])
 
                     case 3:
 
@@ -120,8 +123,10 @@ class ModelExchangeMiddleware:
                 print("Error -> " + str(Error) + " | Retrying...")
 
                 connection_error_count += 1
-                pause(self.EXCHANGE.rateLimit * connection_wait_length_multiplier)
+
+                pause(pause_length)
 
                 if connection_wait_length_multiplier < self.MAX_CONNECTION_WAIT_MULTIPLIER:
                     if connection_error_count % self.MAX_CONNECTION_ERROR_COUNT == 0:
                         connection_wait_length_multiplier += 1
+                        pause_length = (self.EXCHANGE.rateLimit * 0.001) * connection_wait_length_multiplier

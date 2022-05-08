@@ -2,9 +2,10 @@ from getpass import getpass as secret_input
 
 from Account.Database import Controller_Database
 from Account.User import Controller_User
+from Exchange import Controller_Exchange_Middleware
 
 
-def login_or_register() -> dict:
+def login_or_register(event_loop) -> dict:
 
     controller_database: Controller_Database = Controller_Database.ControllerDatabase()
 
@@ -58,22 +59,34 @@ def login_or_register() -> dict:
     controller_user: Controller_User = Controller_User.ControllerUser(username, exchange_name, coin_pair, live_trading)
     controller_user.update_balance(initial_balance[0], initial_balance[1])
 
-    print("Public Key: " + public_key)
-    print("Private Key: " + private_key)
+    controller_exchange_middleware: Controller_Exchange_Middleware = Controller_Exchange_Middleware.ControllerExchangeMiddleware(USER=controller_user,
+                                                                                                                                 LIVE_TRADING=live_trading,
+                                                                                                                                 COIN_PAIR=coin_pair,
+                                                                                                                                 EXCHANGE_NAME=exchange_name,
+                                                                                                                                 PUBLIC_KEY=public_key,
+                                                                                                                                 PRIVATE_KEY=private_key,
+                                                                                                                                 EVENT_LOOP=event_loop)
+    return {"USER": controller_user, "EXCHANGE": controller_exchange_middleware}
 
-    return {"USER": controller_user, "EXCHANGE": None}
 
-
-async def main():
+async def main(event_loop):
 
     print()
 
-    current_user = login_or_register()
+    current_session = login_or_register(event_loop)
 
-    print("Username: " + current_user["USER"].get_username())
-    print("Exchange Name: " + current_user["USER"].get_exchange_name())
-    print("Coin Pair: " + current_user["USER"].get_coin_pair())
-    print("Live Trading: " + str(current_user["USER"].is_live_trading()))
-    print("Balance: " + str(current_user["USER"].get_balance()))
+    await current_session["EXCHANGE"].load_markets()
+    await current_session["EXCHANGE"].update_balance()
+    print("Current Price: " + str(await current_session["EXCHANGE"].get_current_price()))
+
+    print()
+
+    print("Username: " + str(current_session["USER"].get_username()))
+    print("Exchange Name: " + str(current_session["USER"].get_exchange_name()))
+    print("Coin Pair: " + str(current_session["USER"].get_coin_pair()))
+    print("Live Trading: " + str(current_session["USER"].is_live_trading()))
+    print("Balance: " + str(current_session["USER"].get_balance()))
+
+    await current_session["EXCHANGE"].close_exchange()
 
     print()

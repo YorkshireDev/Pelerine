@@ -18,4 +18,4 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     EVENT_LOOP = asyncio.new_event_loop()
-    EVENT_LOOP.run_until_complete(USER_INTERFACE.main())
+    EVENT_LOOP.run_until_complete(USER_INTERFACE.main(EVENT_LOOP))
