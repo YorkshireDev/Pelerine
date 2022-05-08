@@ -5,8 +5,8 @@ class ControllerDatabase:
 
     def __init__(self):
 
-        self.MODEL_CRYPTOGRAPHY: Model_Cryptography.ModelCryptography = Model_Cryptography.ModelCryptography()
-        self.MODEL_DATABASE: Model_Database.ModelDatabase = Model_Database.ModelDatabase(self)
+        self.MODEL_CRYPTOGRAPHY: Model_Cryptography = Model_Cryptography.ModelCryptography()
+        self.MODEL_DATABASE: Model_Database = Model_Database.ModelDatabase(self)
 
     def get_hash(self, password: str) -> str:
 
@@ -32,6 +32,6 @@ class ControllerDatabase:
 
         return self.MODEL_DATABASE.login(username, password)
 
-    def register(self, username: str, password: str, public_key: str, private_key: str, exchange_name: str, coin_pair: str):
+    def register(self, username: str, password: str, public_key: str, private_key: str, exchange_name: str, coin_pair: str, paper_balance: str):
 
-        self.MODEL_DATABASE.register(username, password, public_key, private_key, exchange_name, coin_pair)
+        self.MODEL_DATABASE.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)

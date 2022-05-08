@@ -6,7 +6,7 @@ from Account.Database import Controller_Database
 
 class ModelDatabase:
 
-    def __init__(self, controller_database: Controller_Database.ControllerDatabase):
+    def __init__(self, controller_database: Controller_Database):
 
         self.CONTROLLER_DATABASE = controller_database
         self.CONNECTION = None
@@ -25,7 +25,8 @@ class ModelDatabase:
                  public_key text NOT NULL,
                  private_key text NOT NULL,
                  exchange_name text NOT NULL,
-                 coin_pair text NOT NULL
+                 coin_pair text NOT NULL,
+                 paper_balance TEXT NOT NULL
                  ); """
 
                 cursor = self.CONNECTION.cursor()
@@ -50,7 +51,7 @@ class ModelDatabase:
 
     def login(self, username: str, password: str) -> list:
 
-        query = """ SELECT password,public_key,private_key,exchange_name,coin_pair FROM users WHERE username=? """
+        query = """ SELECT password,public_key,private_key,exchange_name,coin_pair,paper_balance FROM users WHERE username=? """
 
         try:
 
@@ -60,16 +61,23 @@ class ModelDatabase:
             request = cursor.fetchone()
 
             if self.CONTROLLER_DATABASE.verify_hash(request[0], password):
-                return [request[1], self.CONTROLLER_DATABASE.decrypt_secret(request[2], password), request[3], request[4]]
+
+                return [request[1],
+                        self.CONTROLLER_DATABASE.decrypt_secret(request[2], password),
+                        request[3],
+                        request[4],
+                        request[5]]
+
             else:
+
                 return []
 
         except Error as error:
             print(str(error))
 
-    def register(self, username: str, password: str, public_key: str, private_key: str, exchange_name: str, coin_pair: str):
+    def register(self, username: str, password: str, public_key: str, private_key: str, exchange_name: str, coin_pair: str, paper_balance: str):
 
-        query = """ INSERT INTO users(username,password,public_key,private_key,exchange_name,coin_pair) VALUES(?,?,?,?,?,?) """
+        query = """ INSERT INTO users(username,password,public_key,private_key,exchange_name,coin_pair,paper_balance) VALUES(?,?,?,?,?,?,?) """
 
         try:
 
@@ -79,7 +87,8 @@ class ModelDatabase:
                                    public_key,
                                    self.CONTROLLER_DATABASE.encrypt_secret(private_key, password),
                                    exchange_name,
-                                   coin_pair,))
+                                   coin_pair,
+                                   paper_balance,))
 
             self.CONNECTION.commit()
 
