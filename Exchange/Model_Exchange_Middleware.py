@@ -1,6 +1,8 @@
 import ccxt.async_support as ccxt
 from time import sleep as pause
 
+from Account.User import Controller_User
+
 
 class ModelExchangeMiddleware:
 
@@ -8,6 +10,8 @@ class ModelExchangeMiddleware:
     MAX_CONNECTION_WAIT_MULTIPLIER = 5
 
     def __init__(self, **kwargs):
+
+        self.CONTROLLER_USER: Controller_User = kwargs["USER"]
 
         self.LIVE_TRADING: bool = kwargs["LIVE_TRADING"]
         self.COIN_PAIR: str = kwargs["COIN_PAIR"]
@@ -28,22 +32,31 @@ class ModelExchangeMiddleware:
                                            "enableRateLimit": True,
                                            "asyncio_loop": kwargs["EVENT_LOOP"]})
 
-    async def load_markets(self):
-        await self.__process_request(0)
+        self.current_price: float = 0.0
 
-    async def get_balance(self) -> list:
-        return await self.__process_request(1)
+    async def load_markets(self) -> bool:
+
+        await self.__process_request(0)
+        return self.COIN_PAIR in self.EXCHANGE.symbols
+
+    async def get_balance(self):
+
+        await self.__process_request(1)
 
     async def get_current_price(self) -> float:
-        return await self.__process_request(2)
+
+        await self.__process_request(2)
+        return self.current_price
 
     async def submit_order(self):
+
         await self.__process_request(3)
 
     async def close_exchange(self):
+
         await self.__process_request(4)
 
-    async def __process_request(self, request_id: int) -> float | list:
+    async def __process_request(self, request_id: int):
 
         connection_successful = False
 
@@ -57,15 +70,44 @@ class ModelExchangeMiddleware:
                 match request_id:
 
                     case 0:
-                        pass
+
+                        await self.EXCHANGE.load_markets(True)
+
                     case 1:
-                        pass
+
+                        base: float = 0.0
+                        quote: float = 0.0
+
+                        if self.LIVE_TRADING:
+
+                            coin_pair_split = self.COIN_PAIR.split("/")
+
+                            account_balances: dict = await self.EXCHANGE.fetch_balance()["total"]
+
+                            if coin_pair_split[0] in account_balances:
+                                base = float(account_balances[coin_pair_split[0]])
+
+                            if coin_pair_split[1] in account_balances:
+                                quote = float(account_balances[coin_pair_split[1]])
+
+                        else:
+
+                            base = self.CONTROLLER_USER.get_balance()[0]
+                            quote = self.CONTROLLER_USER.get_balance()[1]
+
+                        self.CONTROLLER_USER.update_balance(base, quote)
+
                     case 2:
-                        pass
+
+                        self.current_price = float(await self.EXCHANGE.fetch_ticker(self.COIN_PAIR)["last"])
+
                     case 3:
+
                         pass
+
                     case 4:
-                        pass
+
+                        await self.EXCHANGE.close()
 
                 connection_successful = True
 
