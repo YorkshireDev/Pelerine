@@ -55,11 +55,7 @@ def login_or_register() -> dict:
 
         controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
 
-    controller_user: Controller_User.ControllerUser = Controller_User.ControllerUser(username,
-                                                                                     exchange_name,
-                                                                                     coin_pair,
-                                                                                     live_trading)
-
+    controller_user: Controller_User = Controller_User.ControllerUser(username, exchange_name, coin_pair, live_trading)
     controller_user.update_balance(initial_balance[0], initial_balance[1])
 
     print("Public Key: " + public_key)

@@ -5,7 +5,7 @@ class ControllerUser:
 
     def __init__(self, username: str, exchange_name: str, coin_pair: str, live_trading: bool):
 
-        self.MODEL_USER = Model_User.ModelUser(username, exchange_name, coin_pair, live_trading)
+        self.MODEL_USER: Model_User = Model_User.ModelUser(username, exchange_name, coin_pair, live_trading)
 
     def get_username(self) -> str:
 

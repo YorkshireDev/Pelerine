@@ -8,7 +8,7 @@ class ModelDatabase:
 
     def __init__(self, controller_database: Controller_Database):
 
-        self.CONTROLLER_DATABASE = controller_database
+        self.CONTROLLER_DATABASE: Controller_Database = controller_database
         self.CONNECTION = None
 
         try:
