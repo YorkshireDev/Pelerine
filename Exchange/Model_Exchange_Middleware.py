@@ -39,9 +39,9 @@ class ModelExchangeMiddleware:
         await self.__process_request(0)
         return self.COIN_PAIR in self.EXCHANGE.symbols
 
-    async def update_balance(self):
+    async def update_balance(self, **kwargs):
 
-        await self.__process_request(1)
+        await self.__process_request(1, **kwargs)
 
     async def get_current_price(self) -> float:
 
@@ -56,7 +56,7 @@ class ModelExchangeMiddleware:
 
         await self.__process_request(4)
 
-    async def __process_request(self, request_id: int):
+    async def __process_request(self, request_id: int, **kwargs):
 
         connection_successful = False
 
@@ -94,8 +94,15 @@ class ModelExchangeMiddleware:
 
                         else:
 
-                            base = self.CONTROLLER_USER.get_balance()[0]
-                            quote = self.CONTROLLER_USER.get_balance()[1]
+                            if len(kwargs) == 0:
+
+                                base = self.CONTROLLER_USER.get_balance()[0]
+                                quote = self.CONTROLLER_USER.get_balance()[1]
+
+                            else:
+
+                                base = float(kwargs["BASE"])
+                                quote = float(kwargs["QUOTE"])
 
                         self.CONTROLLER_USER.update_balance(base, quote)
 
