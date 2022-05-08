@@ -1,3 +1,6 @@
+import asyncio
+from asyncio import Event
+from threading import Thread
 from getpass import getpass as secret_input
 from ccxt.async_support import exchanges
 from sys import exit as sys_exit
@@ -90,22 +93,70 @@ async def login_or_register(event_loop) -> dict:
     return {"USER": controller_user, "EXCHANGE": controller_exchange_middleware}
 
 
+async def poll_user_balance(event_main: Event,
+                            event_view: Event,
+                            balance: list,
+                            controller_exchange_middleware: Controller_Exchange_Middleware,
+                            controller_user: Controller_User):
+
+    seconds_passed: int = 0
+
+    while not event_main.is_set():
+
+        if seconds_passed % 60 == 0:
+
+            seconds_passed = 0
+            await controller_exchange_middleware.update_balance()
+
+        temp_balance = controller_user.get_balance()
+        balance[0] = temp_balance[0]
+        balance[1] = temp_balance[1]
+
+        await asyncio.sleep(1.0)
+        seconds_passed += 1
+
+    event_view.set()
+
+
+async def run_ai(event_main: Event, event_view: Event):
+
+    while not event_main.is_set():
+
+        await asyncio.sleep(1.0)
+
+    event_view.set()
+
+
+def poll_user_input(event_main: Event):
+
+    input()
+    event_main.set()
+
+
 async def main(event_loop):
 
     print()
 
     current_session = await login_or_register(event_loop)
+    balance = [0.0, 0.0]
 
-    await current_session["EXCHANGE"].update_balance()
-    print("Current Price: " + str(await current_session["EXCHANGE"].get_current_price()))
+    event_main = Event()
+    event_views = [Event(), Event()]
 
-    print()
+    event_loop.create_task(poll_user_balance(event_main, event_views[0], balance, current_session["EXCHANGE"], current_session["USER"]))
+    event_loop.create_task(run_ai(event_main, event_views[1]))
 
-    print("Username: " + str(current_session["USER"].get_username()))
-    print("Exchange Name: " + str(current_session["USER"].get_exchange_name()))
-    print("Coin Pair: " + str(current_session["USER"].get_coin_pair()))
-    print("Live Trading: " + str(current_session["USER"].is_live_trading()))
-    print("Balance: " + str(current_session["USER"].get_balance()))
+    user_input = Thread(target=poll_user_input, args=(event_main,))
+    user_input.start()
+
+    while not event_main.is_set():
+
+        print("Balance: " + str(balance))
+
+        await asyncio.sleep(1.0)
+
+    for event_view in event_views:
+        await event_view.wait()
 
     await current_session["EXCHANGE"].close_exchange()
 
