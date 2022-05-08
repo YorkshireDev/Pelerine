@@ -84,6 +84,9 @@ async def login_or_register(event_loop) -> dict:
 
     controller_database.register(username, password, public_key, private_key, exchange_name, coin_pair, paper_balance)
 
+    del public_key
+    del private_key
+
     return {"USER": controller_user, "EXCHANGE": controller_exchange_middleware}
 
 
