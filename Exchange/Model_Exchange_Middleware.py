@@ -4,6 +4,9 @@ from time import sleep as pause
 
 class ModelExchangeMiddleware:
 
+    MAX_CONNECTION_ERROR_COUNT = 8
+    MAX_CONNECTION_WAIT_MULTIPLIER = 5
+
     def __init__(self, **kwargs):
 
         self.LIVE_TRADING: bool = kwargs["LIVE_TRADING"]
@@ -41,4 +44,42 @@ class ModelExchangeMiddleware:
         await self.__process_request(4)
 
     async def __process_request(self, request_id: int) -> float | list:
-        pass
+
+        connection_successful = False
+
+        connection_error_count = 0
+        connection_wait_length_multiplier = 1
+
+        while not connection_successful:
+
+            try:
+
+                match request_id:
+
+                    case 0:
+                        pass
+                    case 1:
+                        pass
+                    case 2:
+                        pass
+                    case 3:
+                        pass
+                    case 4:
+                        pass
+
+                connection_successful = True
+
+            except (ccxt.RequestTimeout,
+                    ccxt.DDoSProtection,
+                    ccxt.ExchangeNotAvailable,
+                    ccxt.ExchangeError,
+                    ccxt.InvalidNonce) as Error:
+
+                print("Error -> " + str(Error) + " | Retrying...")
+
+                connection_error_count += 1
+                pause(self.EXCHANGE.rateLimit * connection_wait_length_multiplier)
+
+                if connection_wait_length_multiplier < self.MAX_CONNECTION_WAIT_MULTIPLIER:
+                    if connection_error_count % self.MAX_CONNECTION_ERROR_COUNT == 0:
+                        connection_wait_length_multiplier += 1
