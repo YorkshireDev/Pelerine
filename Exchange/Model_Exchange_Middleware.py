@@ -1,5 +1,6 @@
 import ccxt.async_support as ccxt
-from time import sleep as pause
+from asyncio import sleep as pause
+from asyncio import Event
 
 from Account.User import Controller_User
 
@@ -9,7 +10,9 @@ class ModelExchangeMiddleware:
     MAX_CONNECTION_ERROR_COUNT = 8
     MAX_CONNECTION_WAIT_MULTIPLIER = 5
 
-    def __init__(self, **kwargs):
+    def __init__(self, event_main: Event, **kwargs):
+
+        self.EVENT_MAIN: Event = event_main
 
         self.CONTROLLER_USER: Controller_User = kwargs["USER"]
 
@@ -36,27 +39,27 @@ class ModelExchangeMiddleware:
 
     async def load_markets(self) -> bool:
 
-        await self.__process_request(0)
+        await self.__process_request(0, False)
         return self.COIN_PAIR in self.EXCHANGE.symbols
 
     async def update_balance(self, **kwargs):
 
-        await self.__process_request(1, **kwargs)
+        await self.__process_request(1, False, **kwargs)
 
     async def get_current_price(self) -> float:
 
-        await self.__process_request(2)
+        await self.__process_request(2, False)
         return self.current_price
 
     async def submit_order(self):
 
-        await self.__process_request(3)
+        return await self.__process_request(3, True)
 
     async def close_exchange(self):
 
-        await self.__process_request(4)
+        await self.__process_request(4, True)
 
-    async def __process_request(self, request_id: int, **kwargs):
+    async def __process_request(self, request_id: int, no_retry: bool, **kwargs) -> bool:
 
         connection_successful = False
 
@@ -127,13 +130,22 @@ class ModelExchangeMiddleware:
                     ccxt.ExchangeError,
                     ccxt.InvalidNonce) as Error:
 
+                if no_retry:
+                    print("Error -> " + str(Error) + " | Abandoning...")
+                    return False
+
+                if self.EVENT_MAIN.is_set():
+                    return False
+
                 print("Error -> " + str(Error) + " | Retrying...")
 
                 connection_error_count += 1
 
-                pause(pause_length)
+                await pause(pause_length)
 
                 if connection_wait_length_multiplier < self.MAX_CONNECTION_WAIT_MULTIPLIER:
                     if connection_error_count % self.MAX_CONNECTION_ERROR_COUNT == 0:
                         connection_wait_length_multiplier += 1
                         pause_length = (self.EXCHANGE.rateLimit * 0.001) * connection_wait_length_multiplier
+
+        return True

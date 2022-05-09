@@ -1,11 +1,13 @@
+from asyncio import Event
+
 from Exchange import Model_Exchange_Middleware
 
 
 class ControllerExchangeMiddleware:
 
-    def __init__(self, **kwargs):
+    def __init__(self, event_main: Event, **kwargs):
 
-        self.MODEL_EXCHANGE_MIDDLEWARE: Model_Exchange_Middleware = Model_Exchange_Middleware.ModelExchangeMiddleware(**kwargs)
+        self.MODEL_EXCHANGE_MIDDLEWARE: Model_Exchange_Middleware = Model_Exchange_Middleware.ModelExchangeMiddleware(event_main, **kwargs)
 
     async def load_markets(self) -> bool:
 

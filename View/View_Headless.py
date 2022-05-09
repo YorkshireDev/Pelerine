@@ -10,7 +10,7 @@ from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
 
 
-async def login_or_register(event_loop) -> dict:
+async def login_or_register(event_loop, event_main: Event) -> dict:
 
     controller_database: Controller_Database = Controller_Database.ControllerDatabase()
 
@@ -74,7 +74,8 @@ async def login_or_register(event_loop) -> dict:
         print("Error -> " + exchange_name + " does not exist in CCXT!")
         sys_exit()
 
-    controller_exchange_middleware: Controller_Exchange_Middleware = Controller_Exchange_Middleware.ControllerExchangeMiddleware(USER=controller_user,
+    controller_exchange_middleware: Controller_Exchange_Middleware = Controller_Exchange_Middleware.ControllerExchangeMiddleware(event_main,
+                                                                                                                                 USER=controller_user,
                                                                                                                                  LIVE_TRADING=live_trading,
                                                                                                                                  COIN_PAIR=coin_pair,
                                                                                                                                  EXCHANGE_NAME=exchange_name,
@@ -142,11 +143,11 @@ async def main(event_loop):
 
     print()
 
-    current_session = await login_or_register(event_loop)
-    balance = [0.0, 0.0]
-
     event_main = Event()
     event_views = [Event(), Event()]
+
+    current_session = await login_or_register(event_loop, event_main)
+    balance = [0.0, 0.0]
 
     event_loop.create_task(poll_user_balance(event_main, event_views[0], balance, current_session["EXCHANGE"], current_session["USER"]))
     event_loop.create_task(run_ai(event_main, event_views[1]))
