@@ -164,12 +164,14 @@ async def main(event_loop):
         exchange_name_str: str = str(current_session["USER"].get_exchange_name())
         coin_pair_str: str = str(current_session["USER"].get_coin_pair())
         live_trading_str: str = str(current_session["USER"].is_live_trading())
+        current_price_str: str = str(current_session["EXCHANGE"].get_current_price())
         balance_str: str = str(balance[0]) + " " + coin_pair_split[0] + " | " + str(balance[1]) + " " + coin_pair_split[1]
 
         print(f"Current User: {current_user_str}\n"
               f"Exchange Name: {exchange_name_str}\n"
               f"Coin Pair: {coin_pair_str}\n"
               f"Live Trading: {live_trading_str}\n"
+              f"Current Price: {current_price_str}\n"
               f"Current Balance: {balance_str}\n")
 
         await asyncio.sleep(1.0)

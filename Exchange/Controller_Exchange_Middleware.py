@@ -9,15 +9,14 @@ class ControllerExchangeMiddleware:
     def __init__(self, event_main: Event, **kwargs):
 
         self.MODEL_EXCHANGE_MIDDLEWARE: Model_Exchange_Middleware = Model_Exchange_Middleware.ModelExchangeMiddleware(event_main, **kwargs)
-        self.current_price = 0.0
+        self.current_price: float = 0.0
 
     async def poll_current_price(self, event_main: Event, event_view: Event):
 
-        sleep_time: float = float(self.MODEL_EXCHANGE_MIDDLEWARE.EXCHANGE.rateLimit) / 1000.0
-
         while not event_main.is_set():
 
-            await asyncio.sleep(sleep_time)
+            self.current_price = await self.__get_current_price()
+            await asyncio.sleep(0.001)
 
         event_view.set()
 
@@ -32,6 +31,10 @@ class ControllerExchangeMiddleware:
     async def __get_current_price(self) -> float:
 
         return await self.MODEL_EXCHANGE_MIDDLEWARE.get_current_price()
+
+    def get_current_price(self) -> float:
+
+        return self.current_price
 
     async def submit_order(self):
 
