@@ -5,6 +5,7 @@ from getpass import getpass as secret_input
 from ccxt.async_support import exchanges
 from sys import exit as sys_exit
 
+from AI import Controller_AI
 from Account.Database import Controller_Database
 from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
@@ -126,7 +127,12 @@ async def poll_user_balance(event_main: Event,
 
 async def run_ai(event_main: Event, event_view: Event):
 
-    while not event_main.is_set():
+    event_ai = Event()
+
+    controller_ai: Controller_AI = Controller_AI.ControllerAI(event_main, event_ai)
+    controller_ai.run()
+
+    while not event_ai.is_set():
 
         await asyncio.sleep(1.0)
 
