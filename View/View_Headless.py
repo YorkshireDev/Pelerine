@@ -144,13 +144,14 @@ async def main(event_loop):
     print()
 
     event_main = Event()
-    event_views = [Event(), Event()]
+    event_views = [Event(), Event(), Event()] # [0] PollUserBalance, [1] PollCurrentPrice, [2] AI
 
     current_session = await login_or_register(event_loop, event_main)
     balance = [0.0, 0.0]
 
     event_loop.create_task(poll_user_balance(event_main, event_views[0], balance, current_session["EXCHANGE"], current_session["USER"]))
-    event_loop.create_task(run_ai(event_main, event_views[1]))
+    event_loop.create_task(current_session["EXCHANGE"].poll_current_price(event_main, event_views[1]))
+    event_loop.create_task(run_ai(event_main, event_views[2]))
 
     user_input = Thread(target=poll_user_input, args=(event_main,))
     user_input.start()
