@@ -125,11 +125,11 @@ async def poll_user_balance(event_main: Event,
     event_view.set()
 
 
-async def run_ai(event_main: Event, event_view: Event):
+async def run_ai(event_main: Event, event_view: Event, controller_exchange_middleware: Controller_Exchange_Middleware):
 
     event_ai = Event()
 
-    controller_ai: Controller_AI = Controller_AI.ControllerAI(event_main, event_ai)
+    controller_ai: Controller_AI = Controller_AI.ControllerAI(event_main, event_ai, controller_exchange_middleware)
     controller_ai.run()
 
     while not event_ai.is_set():
@@ -157,7 +157,7 @@ async def main(event_loop):
 
     event_loop.create_task(poll_user_balance(event_main, event_views[0], balance, current_session["EXCHANGE"], current_session["USER"]))
     event_loop.create_task(current_session["EXCHANGE"].poll_current_price(event_main, event_views[1]))
-    event_loop.create_task(run_ai(event_main, event_views[2]))
+    event_loop.create_task(run_ai(event_main, event_views[2], current_session["EXCHANGE"]))
 
     user_input = Thread(target=poll_user_input, args=(event_main,))
     user_input.start()
