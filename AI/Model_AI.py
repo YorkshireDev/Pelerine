@@ -2,12 +2,15 @@ from asyncio import Event
 from threading import Thread
 from threading import Event as T_Event
 from time import sleep
+from timeit import default_timer as timer
 
 from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
 
 
 class ModelAI(Thread):
+
+    TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
 
     def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware, controller_user: Controller_User):
 
@@ -68,10 +71,18 @@ class ModelAI(Thread):
             else:
                 sleep(0.001)
 
+        s_time_fee: float = 0.0
+        e_time_fee: float = self.TIME_BETWEEN_FEE_REQUEST
+
         while not self.EVENT_MAIN.is_set():
 
-            self.__get_fee()
-            print("My Fee: " + str(self.current_fee))
-            sleep(5.0)
+            if e_time_fee >= self.TIME_BETWEEN_FEE_REQUEST:
+
+                self.__get_fee()
+                s_time_fee = timer()
+
+            e_time_fee = timer() - s_time_fee
+
+            sleep(0.001)
 
         self.EVENT_AI.set()
