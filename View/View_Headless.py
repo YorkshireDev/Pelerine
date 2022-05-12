@@ -49,6 +49,11 @@ async def login_or_register(event_loop, event_main: Event) -> dict:
         registering = True
 
         exchange_name = str(input("Exchange: ")).upper()
+
+        if exchange_name != "FTX":
+            print("Error -> Only FTX is supported at this time!")
+            sys_exit()
+
         coin_pair = str(input("Coin Pair: ")).upper()
         print()
         live_trading = str(input("Are you Live Trading or Paper Trading? (L/P): ")).upper() == "L"
