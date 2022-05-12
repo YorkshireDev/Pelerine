@@ -1,12 +1,13 @@
 from asyncio import Event
 from threading import Thread
+from threading import Event as T_Event
 
 from Exchange import Controller_Exchange_Middleware
 
 
 class ModelAI(Thread):
 
-    def __init__(self, event_main: Event, event_ai: Event, controller_exchange_middleware: Controller_Exchange_Middleware):
+    def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware):
 
         Thread.__init__(self)
 
@@ -14,11 +15,39 @@ class ModelAI(Thread):
 
         self.EVENT_MAIN = event_main
         self.EVENT_AI = event_ai
+        self.EVENT_LOOP = event_loop
+
+        self.event_submit_order: T_Event = T_Event()
+
+    def __buy(self, amount: float):
+
+        async def __buy_async(x: float):
+
+            await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(True, x)
+            self.event_submit_order.set()
+
+        self.EVENT_LOOP.create_task(__buy_async(amount))
+
+        self.event_submit_order.wait()
+        self.event_submit_order.clear()
+
+    def __sell(self, amount: float):
+
+        async def __sell_async(x: float):
+
+            await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(False, x)
+            self.event_submit_order.set()
+
+        self.EVENT_LOOP.create_task(__sell_async(amount))
+
+        self.event_submit_order.wait()
+        self.event_submit_order.clear()
 
     def run(self) -> None:
 
         while not self.EVENT_MAIN.is_set():
 
-            current_price: int = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+            self.__buy(0.03919)
+            self.__sell(0.11192)
 
         self.EVENT_AI.set()

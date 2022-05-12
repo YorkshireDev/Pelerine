@@ -51,9 +51,9 @@ class ModelExchangeMiddleware:
         await self.__process_request(2, False)
         return self.current_price
 
-    async def submit_order(self):
+    async def submit_order(self, side: bool, amount: float):
 
-        return await self.__process_request(3, True)
+        return await self.__process_request(3, True, SIDE=side, AMOUNT=amount)
 
     async def close_exchange(self):
 
@@ -116,7 +116,10 @@ class ModelExchangeMiddleware:
 
                     case 3:
 
-                        pass
+                        side: bool = bool(kwargs["SIDE"])
+                        amount: float = float(kwargs["AMOUNT"])
+
+
 
                     case 4:
 

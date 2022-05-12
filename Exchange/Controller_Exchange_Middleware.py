@@ -24,9 +24,9 @@ class ControllerExchangeMiddleware:
 
         return await self.MODEL_EXCHANGE_MIDDLEWARE.load_markets()
 
-    async def update_balance(self):
+    async def update_balance(self, **kwargs):
 
-        await self.MODEL_EXCHANGE_MIDDLEWARE.update_balance()
+        await self.MODEL_EXCHANGE_MIDDLEWARE.update_balance(**kwargs)
 
     async def __get_current_price(self) -> float:
 
@@ -36,9 +36,9 @@ class ControllerExchangeMiddleware:
 
         return self.current_price
 
-    async def submit_order(self):
+    async def submit_order(self, side: bool, amount: float):
 
-        await self.MODEL_EXCHANGE_MIDDLEWARE.submit_order()
+        await self.MODEL_EXCHANGE_MIDDLEWARE.submit_order(side, amount)
 
     async def close_exchange(self):
 
