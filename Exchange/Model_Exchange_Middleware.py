@@ -123,7 +123,7 @@ class ModelExchangeMiddleware:
 
                             if self.LIVE_TRADING:
 
-                                pass
+                                pass  # TODO : Implement once confident in AI
 
                             else:
 
@@ -140,7 +140,7 @@ class ModelExchangeMiddleware:
 
                             if self.LIVE_TRADING:
 
-                                pass
+                                pass  # TODO : Implement once confident in AI
 
                             else:
 
