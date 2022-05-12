@@ -25,6 +25,7 @@ class ModelAI(Thread):
 
         self.event_submit_order: T_Event = T_Event()
         self.current_fee: float = 0.0
+        self.current_minimum_base_order_amount: float = 0.0
 
     def __buy(self, amount: float):
 
@@ -50,14 +51,15 @@ class ModelAI(Thread):
         self.event_submit_order.wait()
         self.event_submit_order.clear()
 
-    def __get_fee(self):
+    def __get_fee_and_min_base_order_amount(self):
 
-        async def __get_fee_async():
+        async def __get_fee_and_min_base_order_amount_async():
 
             self.current_fee = await self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_fee()
+            self.current_minimum_base_order_amount = await self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_minimum_base_order_amount()
             self.event_submit_order.set()
 
-        self.EVENT_LOOP.create_task(__get_fee_async())
+        self.EVENT_LOOP.create_task(__get_fee_and_min_base_order_amount_async())
 
         self.event_submit_order.wait()
         self.event_submit_order.clear()
@@ -78,10 +80,18 @@ class ModelAI(Thread):
 
             if e_time_fee >= self.TIME_BETWEEN_FEE_REQUEST:
 
-                self.__get_fee()
+                self.__get_fee_and_min_base_order_amount()
                 s_time_fee = timer()
 
             e_time_fee = timer() - s_time_fee
+
+            # # # AI # # #
+
+            print("Fee: " + str(self.current_fee))
+            print("Minimum Base Order Amount: " + str(self.current_minimum_base_order_amount))
+            print()
+
+            # # # AI # # #
 
             sleep(0.001)
 

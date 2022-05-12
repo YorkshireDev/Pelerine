@@ -37,6 +37,7 @@ class ModelExchangeMiddleware:
 
         self.current_price: float = 0.0
         self.current_fee: float = 0.0
+        self.minimum_base_order_amount: float = 0.0
 
     async def load_markets(self) -> bool:
 
@@ -64,6 +65,11 @@ class ModelExchangeMiddleware:
 
         await self.__process_request(5, False)
         return self.current_fee
+
+    async def get_minimum_base_order_amount(self) -> float:
+
+        await self.__process_request(6, False)
+        return self.minimum_base_order_amount
 
     async def __process_request(self, request_id: int, no_retry: bool, **kwargs):
 
@@ -182,6 +188,11 @@ class ModelExchangeMiddleware:
                             fee: float = max(fee_buy, fee_sell)
 
                         self.current_fee = fee
+
+                    case 6:
+
+                        minimum_base_order_amount = self.EXCHANGE.markets[self.COIN_PAIR]["limits"]["amount"]["min"]
+                        self.minimum_base_order_amount = float(minimum_base_order_amount)
 
                 connection_successful = True
 

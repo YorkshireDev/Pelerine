@@ -47,3 +47,7 @@ class ControllerExchangeMiddleware:
     async def get_fee(self) -> float:
 
         return await self.MODEL_EXCHANGE_MIDDLEWARE.get_fee()
+
+    async def get_minimum_base_order_amount(self) -> float:
+
+        return await self.MODEL_EXCHANGE_MIDDLEWARE.get_minimum_base_order_amount()
