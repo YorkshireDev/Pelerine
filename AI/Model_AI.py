@@ -73,17 +73,17 @@ class ModelAI(Thread):
             else:
                 sleep(0.001)
 
-        s_time_fee: float = 0.0
-        e_time_fee: float = self.TIME_BETWEEN_FEE_REQUEST
+        s_time: float = 0.0
+        e_time: float = self.TIME_BETWEEN_FEE_REQUEST
 
         while not self.EVENT_MAIN.is_set():
 
-            if e_time_fee >= self.TIME_BETWEEN_FEE_REQUEST:
+            if e_time >= self.TIME_BETWEEN_FEE_REQUEST:
 
                 self.__get_fee_and_min_base_order_amount()
-                s_time_fee = timer()
+                s_time = timer()
 
-            e_time_fee = timer() - s_time_fee
+            e_time = timer() - s_time
 
             # # # AI # # #
 
