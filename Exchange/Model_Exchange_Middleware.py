@@ -127,7 +127,7 @@ class ModelExchangeMiddleware:
 
                             else:
 
-                                user_balance = self.CONTROLLER_USER.get_balance()
+                                user_balance: list = self.CONTROLLER_USER.get_balance()
 
                                 base_amount: float = amount / self.current_price
 
@@ -144,7 +144,14 @@ class ModelExchangeMiddleware:
 
                             else:
 
-                                pass
+                                user_balance: list = self.CONTROLLER_USER.get_balance()
+
+                                quote_amount: float = amount * self.current_price
+
+                                base: float = user_balance[0] - amount
+                                quote: float = user_balance[1] + quote_amount
+
+                                await self.update_balance(BASE=base, QUOTE=quote)
 
 
                     case 4:

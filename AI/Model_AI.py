@@ -3,16 +3,18 @@ from threading import Thread
 from threading import Event as T_Event
 from time import sleep
 
+from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
 
 
 class ModelAI(Thread):
 
-    def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware):
+    def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware, controller_user: Controller_User):
 
         Thread.__init__(self)
 
         self.CONTROLLER_EXCHANGE_MIDDLEWARE: Controller_Exchange_Middleware = controller_exchange_middleware
+        self.CONTROLLER_USER: Controller_User = controller_user
 
         self.EVENT_MAIN = event_main
         self.EVENT_AI = event_ai
@@ -53,9 +55,23 @@ class ModelAI(Thread):
             else:
                 sleep(0.001)
 
+        buying_price: float = 0.0
+
         while not self.EVENT_MAIN.is_set():
 
-            self.__buy(0.00021484375)
+            self.__buy(self.CONTROLLER_USER.get_balance()[1] / 8.0)
+
+            buying_price = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+
+            while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() <= buying_price:
+
+                if self.EVENT_MAIN.is_set():
+                    break
+                else:
+                    sleep(0.001)
+
+            self.__sell(self.CONTROLLER_USER.get_balance()[0])
+
             sleep(5.0)
 
         self.EVENT_AI.set()
