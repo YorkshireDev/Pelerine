@@ -1,6 +1,7 @@
 from asyncio import Event
 from threading import Thread
 from threading import Event as T_Event
+from time import sleep
 
 from Exchange import Controller_Exchange_Middleware
 
@@ -45,9 +46,16 @@ class ModelAI(Thread):
 
     def run(self) -> None:
 
+        while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() == 0:
+
+            if self.EVENT_MAIN.is_set():
+                break
+            else:
+                sleep(0.001)
+
         while not self.EVENT_MAIN.is_set():
 
-            self.__buy(0.03919)
-            self.__sell(0.11192)
+            self.__buy(0.00021484375)
+            sleep(5.0)
 
         self.EVENT_AI.set()

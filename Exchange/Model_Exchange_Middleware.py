@@ -119,6 +119,32 @@ class ModelExchangeMiddleware:
                         side: bool = bool(kwargs["SIDE"])
                         amount: float = float(kwargs["AMOUNT"])
 
+                        if side:  # Buy
+
+                            if self.LIVE_TRADING:
+
+                                pass
+
+                            else:
+
+                                user_balance = self.CONTROLLER_USER.get_balance()
+
+                                base_amount: float = amount / self.current_price
+
+                                base: float = user_balance[0] + base_amount
+                                quote: float = user_balance[1] - amount
+
+                                await self.update_balance(BASE=base, QUOTE=quote)
+
+                        else:  # Sell
+
+                            if self.LIVE_TRADING:
+
+                                pass
+
+                            else:
+
+                                pass
 
 
                     case 4:
