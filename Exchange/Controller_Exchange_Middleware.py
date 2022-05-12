@@ -43,3 +43,7 @@ class ControllerExchangeMiddleware:
     async def close_exchange(self):
 
         await self.MODEL_EXCHANGE_MIDDLEWARE.close_exchange()
+
+    async def get_fee(self) -> float:
+
+        return await self.MODEL_EXCHANGE_MIDDLEWARE.get_fee()

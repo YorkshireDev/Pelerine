@@ -21,6 +21,7 @@ class ModelAI(Thread):
         self.EVENT_LOOP = event_loop
 
         self.event_submit_order: T_Event = T_Event()
+        self.current_fee: float = 0.0
 
     def __buy(self, amount: float):
 
@@ -46,6 +47,18 @@ class ModelAI(Thread):
         self.event_submit_order.wait()
         self.event_submit_order.clear()
 
+    def __get_fee(self):
+
+        async def __get_fee_async():
+
+            self.current_fee = await self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_fee()
+            self.event_submit_order.set()
+
+        self.EVENT_LOOP.create_task(__get_fee_async())
+
+        self.event_submit_order.wait()
+        self.event_submit_order.clear()
+
     def run(self) -> None:
 
         while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() == 0:
@@ -55,23 +68,10 @@ class ModelAI(Thread):
             else:
                 sleep(0.001)
 
-        buying_price: float = 0.0
-
         while not self.EVENT_MAIN.is_set():
 
-            self.__buy(self.CONTROLLER_USER.get_balance()[1] / 8.0)
-
-            buying_price = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
-
-            while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() <= buying_price:
-
-                if self.EVENT_MAIN.is_set():
-                    break
-                else:
-                    sleep(0.001)
-
-            self.__sell(self.CONTROLLER_USER.get_balance()[0])
-
+            self.__get_fee()
+            print("My Fee: " + str(self.current_fee))
             sleep(5.0)
 
         self.EVENT_AI.set()

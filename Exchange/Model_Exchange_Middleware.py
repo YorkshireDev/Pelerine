@@ -36,6 +36,7 @@ class ModelExchangeMiddleware:
                                            "asyncio_loop": kwargs["EVENT_LOOP"]})
 
         self.current_price: float = 0.0
+        self.current_fee: float = 0.0
 
     async def load_markets(self) -> bool:
 
@@ -53,13 +54,18 @@ class ModelExchangeMiddleware:
 
     async def submit_order(self, side: bool, amount: float):
 
-        return await self.__process_request(3, True, SIDE=side, AMOUNT=amount)
+        await self.__process_request(3, True, SIDE=side, AMOUNT=amount)
 
     async def close_exchange(self):
 
         await self.__process_request(4, True)
 
-    async def __process_request(self, request_id: int, no_retry: bool, **kwargs) -> bool:
+    async def get_fee(self) -> float:
+
+        await self.__process_request(5, False)
+        return self.current_fee
+
+    async def __process_request(self, request_id: int, no_retry: bool, **kwargs):
 
         connection_successful = False
 
@@ -153,10 +159,29 @@ class ModelExchangeMiddleware:
 
                                 await self.update_balance(BASE=base, QUOTE=quote)
 
-
                     case 4:
 
                         await self.EXCHANGE.close()
+
+                    case 5:
+
+                        if self.LIVE_TRADING:
+
+                            fee_structure: dict = await self.EXCHANGE.fetch_trading_fee(self.COIN_PAIR)
+                            fee_structure = fee_structure[self.COIN_PAIR]
+                            fee: float = fee_structure["taker"]
+
+                        else:
+
+                            fee_structure_buy: dict = self.EXCHANGE.calculate_fee(self.COIN_PAIR, "market", "buy", 0, 0)
+                            fee_structure_sell: dict = self.EXCHANGE.calculate_fee(self.COIN_PAIR, "market", "sell", 0, 0)
+
+                            fee_buy: float = float(fee_structure_buy["rate"])
+                            fee_sell: float = float(fee_structure_sell["rate"])
+
+                            fee: float = max(fee_buy, fee_sell)
+
+                        self.current_fee = fee
 
                 connection_successful = True
 
