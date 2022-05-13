@@ -11,6 +11,7 @@ from Exchange import Controller_Exchange_Middleware
 class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
+    COIN_COVERAGE_TARGET: float = 0.1  # 10%
 
     def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware, controller_user: Controller_User):
 
@@ -64,6 +65,10 @@ class ModelAI(Thread):
         self.event_submit_order.wait()
         self.event_submit_order.clear()
 
+    def __calculate_grid_structure(self):
+
+        pass
+
     def run(self) -> None:
 
         while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() == 0:
@@ -87,9 +92,7 @@ class ModelAI(Thread):
 
             # # # AI # # #
 
-            print("Fee: " + str(self.current_fee))
-            print("Minimum Base Order Amount: " + str(self.current_minimum_base_order_amount))
-            print()
+            pass
 
             # # # AI # # #
 
