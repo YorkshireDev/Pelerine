@@ -85,14 +85,17 @@ class ModelAI(Thread):
         grid_separation_percentage: float = self.GRID_PRICE_COVERAGE / grid_amount
         grid_separation_value: float = current_price * grid_separation_percentage
 
-        sell_grid = current_price + grid_separation_value
+        sell_grid = (current_price + grid_separation_value) * (1.0 + self.current_fee)
 
         buy_grid_structure: list = []  # [ [PRICE, BOUGHT?], [PRICE, BOUGHT?], .. ]
 
         for _ in range(grid_amount):
 
             current_price -= grid_separation_value
-            buy_grid_structure.append([current_price, False])
+            buy_grid_structure.append([current_price * (1.0 - self.current_fee), False])
+            print("Buy: " + str(buy_grid_structure[-1][0]))
+
+        print("Sell: " + str(sell_grid))
 
         return {"BUY": buy_grid_structure, "SELL": sell_grid}
 
