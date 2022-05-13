@@ -93,9 +93,6 @@ class ModelAI(Thread):
 
             current_price -= grid_separation_value
             buy_grid_structure.append([current_price * (1.0 - self.current_fee), False])
-            print("Buy: " + str(buy_grid_structure[-1][0]))
-
-        print("Sell: " + str(sell_grid))
 
         return {"BUY": buy_grid_structure, "SELL": sell_grid}
 
