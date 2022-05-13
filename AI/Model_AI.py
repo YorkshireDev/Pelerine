@@ -156,6 +156,7 @@ class ModelAI(Thread):
             elif self.__determine_sell(current_price, grid_structure["SELL"]):
 
                 self.__sell(self.CONTROLLER_USER.get_balance()[0])
+                grid_structure: dict = self.__calculate_grid_structure()
 
             # # # AI # # #
 
