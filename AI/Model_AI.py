@@ -110,7 +110,14 @@ class ModelAI(Thread):
 
         return False
 
-    def __determine_sell(self, current_price: float, sell_grid_price: float) -> bool:
+    @staticmethod
+    def __determine_sell(current_price: float, sell_grid_price: float) -> bool:
+
+        if current_price >= sell_grid_price:
+            return True
+
+        # TODO: Implement SELL if current price > buy_grid[0] and < sell_grid and time_spent > N
+        # TODO: Implement Safety Orders if current_price is between buy_grid[n] and buy_grid[n - 1] for N time_spent
 
         return False
 
