@@ -11,7 +11,9 @@ from Exchange import Controller_Exchange_Middleware
 class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
-    COIN_COVERAGE_TARGET: float = 0.1  # 10%
+
+    MAX_GRID_AMOUNT: int = 128
+    GRID_PRICE_COVERAGE: float = 10.0 / 100.0  # 10%
 
     def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware, controller_user: Controller_User):
 
@@ -25,8 +27,10 @@ class ModelAI(Thread):
         self.EVENT_LOOP = event_loop
 
         self.event_submit_order: T_Event = T_Event()
+
         self.current_fee: float = 0.0
-        self.current_minimum_base_order_amount: float = 0.0
+        self.current_minimum_base_order_amount: float = 0.0  # Minimum BASE purchasable by the exchange
+        self.current_base_order_amount: float = 0.0  # The amount of BASE the AI will buy, always >= minimum base order amount
 
     def __buy(self, amount: float):
 
@@ -65,9 +69,32 @@ class ModelAI(Thread):
         self.event_submit_order.wait()
         self.event_submit_order.clear()
 
-    def __calculate_grid_structure(self):
+    def __calculate_grid_structure(self) -> dict:
 
-        pass
+        quote_balance: float = self.CONTROLLER_USER.get_balance()[1] * 0.95
+        current_price = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+
+        grid_amount: int = int(((quote_balance / current_price) // self.current_minimum_base_order_amount))
+        self.current_base_order_amount = self.current_minimum_base_order_amount
+
+        if grid_amount > self.MAX_GRID_AMOUNT:
+
+            self.current_base_order_amount *= (grid_amount / self.MAX_GRID_AMOUNT)
+            grid_amount = self.MAX_GRID_AMOUNT
+
+        grid_separation_percentage: float = self.GRID_PRICE_COVERAGE / grid_amount
+        grid_separation_value: float = current_price * grid_separation_percentage
+
+        sell_grid = current_price + grid_separation_value
+
+        buy_grid_structure: list = []  # [ [PRICE, BOUGHT?], [PRICE, BOUGHT?], .. ]
+
+        for _ in range(grid_amount):
+
+            current_price -= grid_separation_value
+            buy_grid_structure.append([current_price, False])
+
+        return {"BUY": buy_grid_structure, "SELL": sell_grid}
 
     def run(self) -> None:
 
@@ -78,8 +105,11 @@ class ModelAI(Thread):
             else:
                 sleep(0.001)
 
-        s_time: float = 0.0
-        e_time: float = self.TIME_BETWEEN_FEE_REQUEST
+        self.__get_fee_and_min_base_order_amount()
+        grid_structure: dict = self.__calculate_grid_structure()
+
+        s_time: float = timer()
+        e_time: float = 0.0
 
         while not self.EVENT_MAIN.is_set():
 
