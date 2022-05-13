@@ -96,6 +96,14 @@ class ModelAI(Thread):
 
         return {"BUY": buy_grid_structure, "SELL": sell_grid}
 
+    def __determine_buy(self, current_price: float, buy_grid_structure: list) -> bool:
+
+        return False
+
+    def __determine_sell(self, current_price: float, sell_grid_price: float) -> bool:
+
+        return False
+
     def run(self) -> None:
 
         while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() == 0:
@@ -122,7 +130,15 @@ class ModelAI(Thread):
 
             # # # AI # # #
 
-            pass
+            current_price: float = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+
+            if self.__determine_buy(current_price, grid_structure["BUY"]):
+
+                self.__buy(self.current_base_order_amount)
+
+            elif self.__determine_sell(current_price, grid_structure["SELL"]):
+
+                self.__sell(self.CONTROLLER_USER.get_balance()[0])
 
             # # # AI # # #
 
