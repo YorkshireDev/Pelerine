@@ -96,7 +96,17 @@ class ModelAI(Thread):
 
         return {"BUY": buy_grid_structure, "SELL": sell_grid}
 
-    def __determine_buy(self, current_price: float, buy_grid_structure: list) -> bool:
+    @staticmethod
+    def __determine_buy(current_price: float, buy_grid_structure: list) -> bool:
+
+        for buy_grid in buy_grid_structure:
+
+            if not buy_grid[1]:
+
+                if current_price <= buy_grid[0]:
+
+                    buy_grid[1] = True
+                    return True
 
         return False
 
