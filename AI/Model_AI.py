@@ -15,7 +15,13 @@ class ModelAI(Thread):
     MAX_GRID_AMOUNT: int = 128
     GRID_PRICE_COVERAGE: float = 10.0 / 100.0  # 10%
 
-    def __init__(self, event_main: Event, event_ai: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware, controller_user: Controller_User):
+    def __init__(self,
+                 event_main: Event,
+                 event_ai: Event,
+                 event_quit_request,
+                 event_loop,
+                 controller_exchange_middleware: Controller_Exchange_Middleware,
+                 controller_user: Controller_User):
 
         Thread.__init__(self)
 
@@ -24,13 +30,20 @@ class ModelAI(Thread):
 
         self.EVENT_MAIN = event_main
         self.EVENT_AI = event_ai
+        self.EVENT_QUIT_REQUEST = event_quit_request
         self.EVENT_LOOP = event_loop
 
         self.event_submit_order: T_Event = T_Event()
 
+        self.bought: bool = False
+
         self.current_fee: float = 0.0
         self.current_minimum_base_order_amount: float = 0.0  # Minimum BASE purchasable by the exchange
         self.current_base_order_amount: float = 0.0  # The amount of BASE the AI will buy, always >= minimum base order amount
+
+    def has_bought(self):
+
+        return self.bought
 
     def __buy(self, amount: float):
 
@@ -96,8 +109,10 @@ class ModelAI(Thread):
 
         return {"BUY": buy_grid_structure, "SELL": sell_grid}
 
-    @staticmethod
-    def __determine_buy(current_price: float, buy_grid_structure: list) -> bool:
+    def __determine_buy(self, current_price: float, buy_grid_structure: list) -> bool:
+
+        if self.EVENT_QUIT_REQUEST.is_set():
+            return False
 
         for buy_grid in buy_grid_structure:
 
@@ -132,7 +147,6 @@ class ModelAI(Thread):
 
         self.__get_fee_and_min_base_order_amount()
         grid_structure: dict = self.__calculate_grid_structure()
-        bought: bool = False
 
         s_time: float = timer()
         e_time: float = 0.0
@@ -153,15 +167,15 @@ class ModelAI(Thread):
             if self.__determine_buy(current_price, grid_structure["BUY"]):
 
                 self.__buy(self.current_base_order_amount)
-                bought = True
+                self.bought = True
 
             elif self.__determine_sell(current_price, grid_structure["SELL"]):
 
-                if bought:
+                if self.bought:
 
                     self.__sell(self.CONTROLLER_USER.get_balance()[0])
                     grid_structure: dict = self.__calculate_grid_structure()
-                    bought = False
+                    self.bought = False
 
             # # # AI # # #
 

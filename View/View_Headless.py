@@ -3,6 +3,7 @@ from asyncio import Event
 from threading import Thread
 from getpass import getpass as secret_input
 from ccxt.async_support import exchanges
+from time import sleep
 from sys import exit as sys_exit
 
 from AI import Controller_AI
@@ -130,11 +131,8 @@ async def poll_user_balance(event_main: Event,
     event_view.set()
 
 
-async def run_ai(event_main: Event, event_view: Event, event_loop, controller_exchange_middleware: Controller_Exchange_Middleware, controller_user: Controller_User):
+async def run_ai(event_view: Event, event_ai: Event, controller_ai: Controller_AI):
 
-    event_ai = Event()
-
-    controller_ai: Controller_AI = Controller_AI.ControllerAI(event_main, event_ai, event_loop, controller_exchange_middleware, controller_user)
     controller_ai.run()
 
     while not event_ai.is_set():
@@ -144,9 +142,16 @@ async def run_ai(event_main: Event, event_view: Event, event_loop, controller_ex
     event_view.set()
 
 
-def poll_user_input(event_main: Event):
+def poll_user_input(event_main: Event, controller_ai: Controller_AI):
 
     input()
+
+    controller_ai.set_event_quit_request()
+
+    while controller_ai.has_bought():
+        print("Selling Remaining Stock Before Quitting...\n")
+        sleep(1.0)
+
     event_main.set()
 
 
@@ -156,15 +161,18 @@ async def main(event_loop):
 
     event_main = Event()
     event_views = [Event(), Event(), Event()]  # [0] PollUserBalance, [1] PollCurrentPrice, [2] AI
+    event_ai = Event()
 
     current_session = await login_or_register(event_loop, event_main)
     balance = [0.0, 0.0]
 
+    controller_ai: Controller_AI = Controller_AI.ControllerAI(event_main, event_ai, event_loop, current_session["EXCHANGE"], current_session["USER"])
+
     event_loop.create_task(poll_user_balance(event_main, event_views[0], balance, current_session["EXCHANGE"], current_session["USER"]))
     event_loop.create_task(current_session["EXCHANGE"].poll_current_price(event_main, event_views[1]))
-    event_loop.create_task(run_ai(event_main, event_views[2], event_loop, current_session["EXCHANGE"], current_session["USER"]))
+    event_loop.create_task(run_ai(event_views[2], event_ai, controller_ai))
 
-    user_input = Thread(target=poll_user_input, args=(event_main,))
+    user_input = Thread(target=poll_user_input, args=(event_main, controller_ai,))
     user_input.start()
 
     coin_pair_split: str = current_session["USER"].get_coin_pair().split("/")
@@ -190,6 +198,10 @@ async def main(event_loop):
     for event_view in event_views:
         await event_view.wait()
 
-    await current_session["EXCHANGE"].close_exchange()
+    await current_session["EXCHANGE"].update_balance()
+    balance = current_session["USER"].get_balance()
+    balance_str: str = str(balance[0]) + " " + coin_pair_split[0] + " | " + str(balance[1]) + " " + coin_pair_split[1]
 
-    print()
+    print(f"\nFinal Balance: {str(balance_str)}\n")
+
+    await current_session["EXCHANGE"].close_exchange()
