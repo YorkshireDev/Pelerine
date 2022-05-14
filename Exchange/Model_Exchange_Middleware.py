@@ -149,6 +149,15 @@ class ModelExchangeMiddleware:
 
                                 await self.update_balance(BASE=base, QUOTE=quote)
 
+                            with open("Order_Event_Log.txt", "a+") as order_event_log_file:
+                                user_balance: list = self.CONTROLLER_USER.get_balance()
+                                coin_pair_split: list = self.COIN_PAIR.split("/")
+                                order_event_log_file.write("Buy Event: "
+                                                           + str(user_balance[0]) + " " + str(coin_pair_split[0])
+                                                           + " | "
+                                                           + str(user_balance[1]) + " " + str(coin_pair_split[1]))
+                                order_event_log_file.write("\n")
+
                         else:  # Sell
 
                             if self.LIVE_TRADING:
@@ -166,6 +175,15 @@ class ModelExchangeMiddleware:
                                 quote: float = user_balance[1] + quote_amount
 
                                 await self.update_balance(BASE=base, QUOTE=quote)
+
+                            with open("Order_Event_Log.txt", "a+") as order_event_log_file:
+                                user_balance: list = self.CONTROLLER_USER.get_balance()
+                                coin_pair_split: list = self.COIN_PAIR.split("/")
+                                order_event_log_file.write("Sell Event: "
+                                                           + str(user_balance[0]) + " " + str(coin_pair_split[0])
+                                                           + " | "
+                                                           + str(user_balance[1]) + " " + str(coin_pair_split[1]))
+                                order_event_log_file.write("\n")
 
                     case 4:
 
