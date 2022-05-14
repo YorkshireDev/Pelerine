@@ -132,6 +132,7 @@ class ModelAI(Thread):
 
         self.__get_fee_and_min_base_order_amount()
         grid_structure: dict = self.__calculate_grid_structure()
+        bought: bool = False
 
         s_time: float = timer()
         e_time: float = 0.0
@@ -152,11 +153,15 @@ class ModelAI(Thread):
             if self.__determine_buy(current_price, grid_structure["BUY"]):
 
                 self.__buy(self.current_base_order_amount)
+                bought = True
 
             elif self.__determine_sell(current_price, grid_structure["SELL"]):
 
-                self.__sell(self.CONTROLLER_USER.get_balance()[0])
-                grid_structure: dict = self.__calculate_grid_structure()
+                if bought:
+
+                    self.__sell(self.CONTROLLER_USER.get_balance()[0])
+                    grid_structure: dict = self.__calculate_grid_structure()
+                    bought = False
 
             # # # AI # # #
 
