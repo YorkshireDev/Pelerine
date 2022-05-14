@@ -149,7 +149,7 @@ def poll_user_input(event_main: Event, controller_ai: Controller_AI):
     controller_ai.set_event_quit_request()
 
     while controller_ai.has_bought():
-        print("Selling Remaining Stock Before Quitting...\n")
+        print("\nSelling Remaining Stock Before Quitting...")
         sleep(1.0)
 
     event_main.set()
@@ -186,12 +186,12 @@ async def main(event_loop):
         current_price_str: str = str(current_session["EXCHANGE"].get_current_price())
         balance_str: str = str(balance[0]) + " " + coin_pair_split[0] + " | " + str(balance[1]) + " " + coin_pair_split[1]
 
-        print(f"Current User: {current_user_str}\n"
+        print(f"\nCurrent User: {current_user_str}\n"
               f"Exchange Name: {exchange_name_str}\n"
               f"Coin Pair: {coin_pair_str}\n"
               f"Live Trading: {live_trading_str}\n"
               f"Current Price: {current_price_str}\n"
-              f"Current Balance: {balance_str}\n")
+              f"Current Balance: {balance_str}")
 
         await asyncio.sleep(1.0)
 
