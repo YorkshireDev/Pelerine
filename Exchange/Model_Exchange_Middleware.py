@@ -129,7 +129,7 @@ class ModelExchangeMiddleware:
                     case 3:
 
                         side: bool = bool(kwargs["SIDE"])
-                        amount: float = float(kwargs["AMOUNT"])
+                        base_amount: float = float(kwargs["AMOUNT"])
 
                         if side:  # Buy
 
@@ -141,10 +141,11 @@ class ModelExchangeMiddleware:
 
                                 user_balance: list = self.CONTROLLER_USER.get_balance()
 
-                                base_amount: float = amount / self.current_price
+                                quote_amount: float = base_amount * self.current_price
+                                quote_amount -= (quote_amount * await self.get_fee())
 
                                 base: float = user_balance[0] + base_amount
-                                quote: float = user_balance[1] - amount
+                                quote: float = user_balance[1] - quote_amount
 
                                 await self.update_balance(BASE=base, QUOTE=quote)
 
@@ -158,9 +159,10 @@ class ModelExchangeMiddleware:
 
                                 user_balance: list = self.CONTROLLER_USER.get_balance()
 
-                                quote_amount: float = amount * self.current_price
+                                quote_amount: float = base_amount * self.current_price
+                                quote_amount -= (quote_amount * await self.get_fee())
 
-                                base: float = user_balance[0] - amount
+                                base: float = user_balance[0] - base_amount
                                 quote: float = user_balance[1] + quote_amount
 
                                 await self.update_balance(BASE=base, QUOTE=quote)
