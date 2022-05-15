@@ -11,7 +11,7 @@ from Exchange import Controller_Exchange_Middleware
 class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
-    TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 10.0 * 1.0 * 1.0  # Seconds * Minutes * Hours
+    TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 5.0 * 1.0 * 1.0  # Seconds * Minutes * Hours
 
     MAX_GRID_AMOUNT: int = 128
     GRID_PRICE_COVERAGE: float = 10.0 / 100.0  # 10%
@@ -109,7 +109,7 @@ class ModelAI(Thread):
             current_price -= grid_separation_value
             buy_grid_structure.append([current_price * (1.0 - self.current_fee), False])
 
-        return {"BUY": buy_grid_structure, "SELL": sell_grid_structure}
+        return {"BUY": buy_grid_structure, "SELL": sell_grid_structure, "GRID_SEPARATION_PERCENTAGE": grid_separation_percentage}
 
     def __determine_buy(self, current_price: float, buy_grid_structure: list) -> bool:
 
@@ -127,18 +127,37 @@ class ModelAI(Thread):
 
         return False
 
-    def __determine_sell(self, current_price: float, sell_grid_structure: list) -> bool:
+    def __determine_sell(self, current_price: float, grid_structure: dict) -> bool:
 
-        sell_grid_price: float = sell_grid_structure[0]
+        sell_grid_price: float = grid_structure["SELL"][0]
 
         if current_price >= sell_grid_price:
             return True
 
         if self.safety_order:
-            pass
 
-        # TODO: Implement SELL if current price > buy_grid[0] and < sell_grid and time_spent > N
-        # TODO: Implement Safety Orders if current_price is between buy_grid[n] and buy_grid[n - 1] for N time_spent
+            buy_grid_structure: list = grid_structure["BUY"]
+            grid_separation_percentage: float = grid_structure["GRID_SEPARATION_PERCENTAGE"]
+
+            if (current_price * (1.0 + self.current_fee)) > buy_grid_structure[0][0]:
+                return True
+
+            new_sell_price: float = 0.0
+            bought_grids: float = 0.0
+
+            for buy_grid in buy_grid_structure:
+
+                if buy_grid[1]:
+                    new_sell_price += buy_grid[0]
+                    bought_grids += 1.0
+                else:
+                    break
+
+            new_sell_price /= bought_grids
+            new_sell_price *= (1.0 + grid_separation_percentage)
+            new_sell_price *= (1.0 + self.current_fee)
+
+            grid_structure["SELL"][0] = new_sell_price
 
         return False
 
@@ -180,9 +199,9 @@ class ModelAI(Thread):
                 if not self.safety_order and e_time_safety_order_trigger >= self.TIME_UNTIL_SAFETY_ORDER_TRIGGER:
                     self.safety_order = True
 
-                if self.__determine_sell(current_price, grid_structure["SELL"]):
+                if self.__determine_sell(current_price, grid_structure):
 
-                    self.__sell(self.CONTROLLER_USER.get_balance[0])
+                    self.__sell(self.CONTROLLER_USER.get_balance()[0])
                     grid_structure: dict = self.__calculate_grid_structure()
                     self.bought = False
                     self.safety_order = False
