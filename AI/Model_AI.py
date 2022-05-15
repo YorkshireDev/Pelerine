@@ -12,6 +12,7 @@ class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
     TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
+    PERCENTAGE_DROP_FOR_SAFETY_ORDER_TRIGGER: float = 25.0 / 100.0  # 25%
     TIME_UNTIL_PRICE_TOO_HIGH_RESTRUCTURE: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
 
     MAX_GRID_AMOUNT: int = 128
@@ -223,10 +224,26 @@ class ModelAI(Thread):
 
             if self.bought:
 
-                e_time_safety_order_trigger: float = timer() - s_time_safety_order_trigger
+                if not self.safety_order:
 
-                if not self.safety_order and e_time_safety_order_trigger >= self.TIME_UNTIL_SAFETY_ORDER_TRIGGER:
-                    self.safety_order = True
+                    e_time_safety_order_trigger: float = timer() - s_time_safety_order_trigger
+
+                    if e_time_safety_order_trigger >= self.TIME_UNTIL_SAFETY_ORDER_TRIGGER:
+                        self.safety_order = True
+
+                if not self.safety_order:
+
+                    bought_grids: int = 0
+
+                    for buy_grid in grid_structure["BUY"]:
+
+                        if buy_grid[1]:
+                            bought_grids += 1
+                        else:
+                            break
+
+                    if bought_grids >= int((len(grid_structure["BUY"]) * self.PERCENTAGE_DROP_FOR_SAFETY_ORDER_TRIGGER)):
+                        self.safety_order = True
 
                 if self.__determine_sell(current_price, grid_structure):
 
