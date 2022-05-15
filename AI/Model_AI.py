@@ -11,6 +11,7 @@ from Exchange import Controller_Exchange_Middleware
 class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
+    TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 10.0 * 1.0 * 1.0  # Seconds * Minutes * Hours
 
     MAX_GRID_AMOUNT: int = 128
     GRID_PRICE_COVERAGE: float = 10.0 / 100.0  # 10%
@@ -36,6 +37,7 @@ class ModelAI(Thread):
         self.event_submit_order: T_Event = T_Event()
 
         self.bought: bool = False
+        self.safety_order: bool = False
 
         self.current_fee: float = 0.0
         self.current_minimum_base_order_amount: float = 0.0  # Minimum BASE purchasable by the exchange
@@ -98,7 +100,7 @@ class ModelAI(Thread):
         grid_separation_percentage: float = self.GRID_PRICE_COVERAGE / grid_amount
         grid_separation_value: float = current_price * grid_separation_percentage
 
-        sell_grid = (current_price + grid_separation_value) * (1.0 + self.current_fee)
+        sell_grid_structure: list = [(current_price + grid_separation_value) * (1.0 + self.current_fee)]
 
         buy_grid_structure: list = []  # [ [PRICE, BOUGHT?], [PRICE, BOUGHT?], .. ]
 
@@ -107,7 +109,7 @@ class ModelAI(Thread):
             current_price -= grid_separation_value
             buy_grid_structure.append([current_price * (1.0 - self.current_fee), False])
 
-        return {"BUY": buy_grid_structure, "SELL": sell_grid}
+        return {"BUY": buy_grid_structure, "SELL": sell_grid_structure}
 
     def __determine_buy(self, current_price: float, buy_grid_structure: list) -> bool:
 
@@ -125,11 +127,15 @@ class ModelAI(Thread):
 
         return False
 
-    @staticmethod
-    def __determine_sell(current_price: float, sell_grid_price: float) -> bool:
+    def __determine_sell(self, current_price: float, sell_grid_structure: list) -> bool:
+
+        sell_grid_price: float = sell_grid_structure[0]
 
         if current_price >= sell_grid_price:
             return True
+
+        if self.safety_order:
+            pass
 
         # TODO: Implement SELL if current price > buy_grid[0] and < sell_grid and time_spent > N
         # TODO: Implement Safety Orders if current_price is between buy_grid[n] and buy_grid[n - 1] for N time_spent
@@ -148,17 +154,12 @@ class ModelAI(Thread):
         self.__get_fee_and_min_base_order_amount()
         grid_structure: dict = self.__calculate_grid_structure()
 
-        s_time: float = timer()
-        e_time: float = 0.0
+        s_time_fee_min_request: float = timer()
+        s_time_safety_order_trigger: float = 0.0
 
         while not self.EVENT_MAIN.is_set():
 
-            if e_time >= self.TIME_BETWEEN_FEE_REQUEST:
-
-                self.__get_fee_and_min_base_order_amount()
-                s_time = timer()
-
-            e_time = timer() - s_time
+            e_time_fee_min_request: float = timer() - s_time_fee_min_request
 
             # # # AI # # #
 
@@ -169,15 +170,29 @@ class ModelAI(Thread):
                 self.__buy(self.current_base_order_amount)
                 self.bought = True
 
-            elif self.__determine_sell(current_price, grid_structure["SELL"]):
+                if not self.safety_order:
+                    s_time_safety_order_trigger: float = timer()
 
-                if self.bought:
+            if self.bought:
 
-                    self.__sell(self.CONTROLLER_USER.get_balance()[0])
+                e_time_safety_order_trigger: float = timer() - s_time_safety_order_trigger
+
+                if not self.safety_order and e_time_safety_order_trigger >= self.TIME_UNTIL_SAFETY_ORDER_TRIGGER:
+                    self.safety_order = True
+
+                if self.__determine_sell(current_price, grid_structure["SELL"]):
+
+                    self.__sell(self.CONTROLLER_USER.get_balance[0])
                     grid_structure: dict = self.__calculate_grid_structure()
                     self.bought = False
+                    self.safety_order = False
 
             # # # AI # # #
+
+            if e_time_fee_min_request >= self.TIME_BETWEEN_FEE_REQUEST:
+
+                self.__get_fee_and_min_base_order_amount()
+                s_time_fee_min_request = timer()
 
             sleep(0.001)
 
