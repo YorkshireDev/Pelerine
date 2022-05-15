@@ -11,7 +11,7 @@ from Exchange import Controller_Exchange_Middleware
 class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
-    TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 5.0 * 1.0 * 1.0  # Seconds * Minutes * Hours
+    TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 60 * 60 * 1.0  # Seconds * Minutes * Hours
 
     MAX_GRID_AMOUNT: int = 128
     GRID_PRICE_COVERAGE: float = 10.0 / 100.0  # 10%
