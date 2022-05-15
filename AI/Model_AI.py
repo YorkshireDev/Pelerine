@@ -12,6 +12,7 @@ class ModelAI(Thread):
 
     TIME_BETWEEN_FEE_REQUEST: float = 60.0 * 60.0 * 1.0  # Seconds * Minutes * Hours
     TIME_UNTIL_SAFETY_ORDER_TRIGGER: float = 60 * 60 * 1.0  # Seconds * Minutes * Hours
+    TIME_UNTIL_PRICE_TOO_HIGH_RESTRUCTURE: float = 10.0 * 1.0 * 1.0  # Seconds * Minutes * Hours
 
     MAX_GRID_AMOUNT: int = 128
     GRID_PRICE_COVERAGE: float = 10.0 / 100.0  # 10%
@@ -84,10 +85,13 @@ class ModelAI(Thread):
         self.event_submit_order.wait()
         self.event_submit_order.clear()
 
-    def __calculate_grid_structure(self) -> dict:
+    def __calculate_grid_structure(self, use_offset=False) -> dict:
 
         quote_balance: float = self.CONTROLLER_USER.get_balance()[1] * 0.95
         current_price = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+
+        if use_offset:
+            pass
 
         grid_amount: int = int(((quote_balance / current_price) // self.current_minimum_base_order_amount))
         self.current_base_order_amount = self.current_minimum_base_order_amount
@@ -178,13 +182,35 @@ class ModelAI(Thread):
         s_time_fee_min_request: float = timer()
         s_time_safety_order_trigger: float = 0.0
 
-        while not self.EVENT_MAIN.is_set():
+        s_time_price_too_high: float = 0.0
+        price_too_high: bool = False
 
-            e_time_fee_min_request: float = timer() - s_time_fee_min_request
+        while not self.EVENT_MAIN.is_set():
 
             # # # AI # # #
 
             current_price: float = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+
+            if not self.bought and current_price > grid_structure["BUY"][0][0]:
+
+                if price_too_high:
+
+                    e_time_price_too_high: float = timer() - s_time_price_too_high
+
+                    if e_time_price_too_high >= self.TIME_UNTIL_PRICE_TOO_HIGH_RESTRUCTURE:
+
+                        grid_structure: dict = self.__calculate_grid_structure(True)
+                        price_too_high = False
+
+                else:
+
+                    price_too_high = True
+                    s_time_price_too_high = timer()
+
+            else:
+
+                if price_too_high:
+                    price_too_high = False
 
             if self.__determine_buy(current_price, grid_structure["BUY"]):
 
@@ -209,6 +235,8 @@ class ModelAI(Thread):
                     self.safety_order = False
 
             # # # AI # # #
+
+            e_time_fee_min_request: float = timer() - s_time_fee_min_request
 
             if e_time_fee_min_request >= self.TIME_BETWEEN_FEE_REQUEST:
 
