@@ -36,9 +36,9 @@ class ControllerExchangeMiddleware:
 
         return self.current_price
 
-    async def submit_order(self, side: bool, amount: float):
+    async def submit_order(self, side: bool, amount: float, safety_order: bool = False):
 
-        await self.MODEL_EXCHANGE_MIDDLEWARE.submit_order(side, amount)
+        await self.MODEL_EXCHANGE_MIDDLEWARE.submit_order(side, amount, safety_order)
 
     async def close_exchange(self):
 

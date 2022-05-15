@@ -63,7 +63,7 @@ class ModelAI(Thread):
 
         async def __sell_async(x: float):
 
-            await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(False, x)
+            await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(False, x, self.safety_order)
             self.event_submit_order.set()
 
         self.EVENT_LOOP.create_task(__sell_async(amount))

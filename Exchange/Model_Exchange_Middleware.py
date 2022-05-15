@@ -53,9 +53,9 @@ class ModelExchangeMiddleware:
         await self.__process_request(2, False)
         return self.current_price
 
-    async def submit_order(self, side: bool, amount: float):
+    async def submit_order(self, side: bool, amount: float, safety_order: bool):
 
-        await self.__process_request(3, True, SIDE=side, AMOUNT=amount)
+        await self.__process_request(3, True, SIDE=side, AMOUNT=amount, SAFETY_ORDER=safety_order)
 
     async def close_exchange(self):
 
@@ -177,12 +177,16 @@ class ModelExchangeMiddleware:
                                 await self.update_balance(BASE=base, QUOTE=quote)
 
                             with open("Order_Event_Log.txt", "a+") as order_event_log_file:
+                                safety_order: bool = bool(kwargs["SAFETY_ORDER"])
                                 user_balance: list = self.CONTROLLER_USER.get_balance()
                                 coin_pair_split: list = self.COIN_PAIR.split("/")
                                 order_event_log_file.write("Sell Event: "
                                                            + str(user_balance[0]) + " " + str(coin_pair_split[0])
                                                            + " | "
-                                                           + str(user_balance[1]) + " " + str(coin_pair_split[1]))
+                                                           + str(user_balance[1]) + " " + str(coin_pair_split[1])
+                                                           + " | "
+                                                           + "Safety Order: "
+                                                           + str(safety_order))
                                 order_event_log_file.write("\n")
 
                     case 4:
