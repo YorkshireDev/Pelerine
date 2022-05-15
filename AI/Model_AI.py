@@ -159,6 +159,8 @@ class ModelAI(Thread):
 
             grid_structure["SELL"][0] = new_sell_price
 
+        # TODO: Also trigger safety orders based on % dropped over sell price
+
         return False
 
     def run(self) -> None:
