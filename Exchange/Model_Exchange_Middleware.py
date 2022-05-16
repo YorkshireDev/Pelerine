@@ -39,7 +39,7 @@ class ModelExchangeMiddleware:
         self.current_fee: float = 0.0
         self.minimum_base_order_amount: float = 0.0
 
-        self.first_sell: bool = True
+        self.first_order: bool = True
         self.starting_quote: float = 0.0
         self.profit_percentage: float = 0.0
 
@@ -138,6 +138,11 @@ class ModelExchangeMiddleware:
                         side: bool = bool(kwargs["SIDE"])
                         base_amount: float = float(kwargs["AMOUNT"])
 
+                        if self.first_order:
+                            user_balance: list = self.CONTROLLER_USER.get_balance()
+                            self.starting_quote = user_balance[1]
+                            self.first_order = False
+
                         if side:  # Buy
 
                             if self.LIVE_TRADING:
@@ -166,12 +171,6 @@ class ModelExchangeMiddleware:
                                 order_event_log_file.write("\n")
 
                         else:  # Sell
-
-                            if self.first_sell:
-
-                                user_balance: list = self.CONTROLLER_USER.get_balance()
-                                self.starting_quote = user_balance[1]
-                                self.first_sell = False
 
                             if self.LIVE_TRADING:
 
