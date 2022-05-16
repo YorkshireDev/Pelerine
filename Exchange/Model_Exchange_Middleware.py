@@ -147,7 +147,7 @@ class ModelExchangeMiddleware:
 
                             if self.LIVE_TRADING:
 
-                                pass  # TODO : Implement once confident in AI
+                                await self.EXCHANGE.create_order(self.COIN_PAIR, "market", "buy", base_amount)
 
                             else:
 
@@ -174,7 +174,7 @@ class ModelExchangeMiddleware:
 
                             if self.LIVE_TRADING:
 
-                                pass  # TODO : Implement once confident in AI
+                                await self.EXCHANGE.create_order(self.COIN_PAIR, "market", "sell", base_amount)
 
                             else:
 
