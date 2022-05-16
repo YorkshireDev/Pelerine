@@ -39,6 +39,13 @@ class ModelExchangeMiddleware:
         self.current_fee: float = 0.0
         self.minimum_base_order_amount: float = 0.0
 
+        self.first_sell: bool = True
+        self.starting_quote: float = 0.0
+        self.profit_percentage: float = 0.0
+
+    def get_profit_percentage(self) -> str:
+        return str(self.profit_percentage) + "%"
+
     async def load_markets(self) -> bool:
 
         await self.__process_request(0, False)
@@ -160,6 +167,12 @@ class ModelExchangeMiddleware:
 
                         else:  # Sell
 
+                            if self.first_sell:
+
+                                user_balance: list = self.CONTROLLER_USER.get_balance()
+                                self.starting_quote = user_balance[1]
+                                self.first_sell = False
+
                             if self.LIVE_TRADING:
 
                                 pass  # TODO : Implement once confident in AI
@@ -188,6 +201,17 @@ class ModelExchangeMiddleware:
                                                            + "Safety Order: "
                                                            + str(safety_order))
                                 order_event_log_file.write("\n")
+
+                            user_balance: list = self.CONTROLLER_USER.get_balance()
+
+                            self.profit_percentage = user_balance[1] / self.starting_quote
+                            self.profit_percentage -= 1.0
+                            self.profit_percentage *= 100.0  # Converts e.g., 1.2 to 20 (%)
+
+                            rounded_profit_percentage: float = round(self.profit_percentage, 2)
+
+                            if rounded_profit_percentage != 0.0:
+                                self.profit_percentage = rounded_profit_percentage
 
                     case 4:
 

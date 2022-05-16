@@ -11,6 +11,10 @@ class ControllerExchangeMiddleware:
         self.MODEL_EXCHANGE_MIDDLEWARE: Model_Exchange_Middleware = Model_Exchange_Middleware.ModelExchangeMiddleware(event_main, **kwargs)
         self.current_price: float = 0.0
 
+    def get_profit_percentage(self) -> str:
+
+        return self.MODEL_EXCHANGE_MIDDLEWARE.get_profit_percentage()
+
     async def poll_current_price(self, event_main: Event, event_view: Event):
 
         while not event_main.is_set():

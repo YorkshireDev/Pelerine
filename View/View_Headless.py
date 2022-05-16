@@ -185,13 +185,15 @@ async def main(event_loop):
         live_trading_str: str = str(current_session["USER"].is_live_trading())
         current_price_str: str = str(current_session["EXCHANGE"].get_current_price())
         balance_str: str = str(balance[0]) + " " + coin_pair_split[0] + " | " + str(balance[1]) + " " + coin_pair_split[1]
+        profit_percentage_str: str = str(current_session["EXCHANGE"].get_profit_percentage())
 
         print(f"\nCurrent User: {current_user_str}\n"
               f"Exchange Name: {exchange_name_str}\n"
               f"Coin Pair: {coin_pair_str}\n"
               f"Live Trading: {live_trading_str}\n"
               f"Current Price: {current_price_str}\n"
-              f"Current Balance: {balance_str}")
+              f"Current Balance: {balance_str}\n"
+              f"Profit Percentage: {profit_percentage_str}")
 
         await asyncio.sleep(1.0)
 
