@@ -105,6 +105,7 @@ class ModelAI(Thread):
             grid_amount = self.MAX_GRID_AMOUNT
 
         if grid_amount == 0:
+
             print("CRITICAL ERROR -> Not enough QUOTE currency to buy any BASE currency!")
             self.EVENT_MAIN.set()
             self.EVENT_AI.set()
