@@ -3,6 +3,7 @@ from threading import Thread
 from threading import Event as T_Event
 from time import sleep
 from timeit import default_timer as timer
+from sys import exit as sys_exit
 
 from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
@@ -102,6 +103,12 @@ class ModelAI(Thread):
 
             self.current_base_order_amount *= (grid_amount / self.MAX_GRID_AMOUNT)
             grid_amount = self.MAX_GRID_AMOUNT
+
+        if grid_amount == 0:
+            print("CRITICAL ERROR -> Not enough QUOTE currency to buy any BASE currency!")
+            self.EVENT_MAIN.set()
+            self.EVENT_AI.set()
+            return {}
 
         grid_separation_percentage: float = self.GRID_PRICE_COVERAGE / grid_amount
         grid_separation_value: float = current_price * grid_separation_percentage

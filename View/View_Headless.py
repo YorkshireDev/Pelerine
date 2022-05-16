@@ -173,6 +173,7 @@ async def main(event_loop):
     event_loop.create_task(run_ai(event_views[2], event_ai, controller_ai))
 
     user_input = Thread(target=poll_user_input, args=(event_main, controller_ai,))
+    user_input.daemon = True
     user_input.start()
 
     coin_pair_split: str = current_session["USER"].get_coin_pair().split("/")
@@ -207,3 +208,5 @@ async def main(event_loop):
     print(f"\nFinal Balance: {str(balance_str)}\n")
 
     await current_session["EXCHANGE"].close_exchange()
+
+    sys_exit()
