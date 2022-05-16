@@ -153,6 +153,7 @@ class ModelExchangeMiddleware:
                             if self.LIVE_TRADING:
 
                                 await self.EXCHANGE.create_order(self.COIN_PAIR, "market", "buy", base_amount)
+                                await self.update_balance()
 
                             else:
 
@@ -180,6 +181,7 @@ class ModelExchangeMiddleware:
                             if self.LIVE_TRADING:
 
                                 await self.EXCHANGE.create_order(self.COIN_PAIR, "market", "sell", base_amount)
+                                await self.update_balance()
 
                             else:
 
