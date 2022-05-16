@@ -172,20 +172,19 @@ class ModelAI(Thread):
 
             grid_structure["SELL"][0] = new_sell_price
 
-        # TODO: Also trigger safety orders based on % dropped over sell price
-
         return False
 
     def run(self) -> None:
 
-        while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() == 0:
+        self.__get_fee_and_min_base_order_amount()
+
+        while self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price() == 0 or self.current_fee == 0 or self.current_minimum_base_order_amount == 0:
 
             if self.EVENT_MAIN.is_set():
                 break
             else:
                 sleep(0.001)
 
-        self.__get_fee_and_min_base_order_amount()
         grid_structure: dict = self.__calculate_grid_structure()
 
         s_time_fee_min_request: float = timer()
