@@ -3,7 +3,6 @@ from threading import Thread
 from threading import Event as T_Event
 from time import sleep
 from timeit import default_timer as timer
-from sys import exit as sys_exit
 
 from Account.User import Controller_User
 from Exchange import Controller_Exchange_Middleware
