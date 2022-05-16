@@ -23,6 +23,8 @@ Pelerine is a free and open-source (FOSS) autonomous cryptocurrency trading bot 
 
 * Real-time reporting - The current price of a coin-pair, your balance from your exchange and the percentage profit made since the bot started is all reported in real-time.
 
+* Sell remaining stock - If you try to exit the program (ENTER), if you have buys waiting to be sold the program will first wait until it can sell the remaining base currency before it actually quits.
+
 * Modular code - If you wanted to write your own AI from scratch, the only requirement is that it is initialised by the AI controller and inherits the Thread package.
 
 ---
@@ -68,3 +70,5 @@ When you start the program, you will be asked to type in some initial things, br
 * Public Key (Register/Live): The public key from your exchange.
 * Private Key (Register/Live): The private key from your exchange.
 * Starting Quote Balance (Register/Paper): The starting quote currency balance for your paper trading account.
+
+To stop the program, press ENTER.
