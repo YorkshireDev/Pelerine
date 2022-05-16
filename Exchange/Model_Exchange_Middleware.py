@@ -145,6 +145,11 @@ class ModelExchangeMiddleware:
 
                         if side:  # Buy
 
+                            quote_to_base: float = self.CONTROLLER_USER.get_balance()[1] / self.current_price
+
+                            if quote_to_base < base_amount:
+                                return  # User does not have enough money to buy BASE currency so just return
+
                             if self.LIVE_TRADING:
 
                                 await self.EXCHANGE.create_order(self.COIN_PAIR, "market", "buy", base_amount)
