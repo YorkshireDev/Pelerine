@@ -110,19 +110,19 @@ class ModelAI(Thread):
             self.EVENT_AI.set()
             return {}
 
-        grid_separation_percentage: float = self.GRID_PRICE_COVERAGE / grid_amount
-        grid_separation_value: float = current_price * grid_separation_percentage
+        difference: float = current_price - (current_price * (1.0 - self.GRID_PRICE_COVERAGE))
+        grid_separation_value: float = (difference / grid_amount) * (1.0 + self.current_fee)
 
-        sell_grid_structure: list = [(current_price + grid_separation_value) * (1.0 + self.current_fee)]
+        sell_grid_structure: list = [(current_price + (grid_separation_value * 2.0))]
 
         buy_grid_structure: list = []  # [ [PRICE, BOUGHT?], [PRICE, BOUGHT?], .. ]
 
         for _ in range(grid_amount):
 
             current_price -= grid_separation_value
-            buy_grid_structure.append([current_price * (1.0 - self.current_fee), False])
+            buy_grid_structure.append([current_price, False])
 
-        return {"BUY": buy_grid_structure, "SELL": sell_grid_structure, "GRID_SEPARATION_PERCENTAGE": grid_separation_percentage}
+        return {"BUY": buy_grid_structure, "SELL": sell_grid_structure, "GRID_SEPARATION_VALUE": grid_separation_value}
 
     def __determine_buy(self, current_price: float, buy_grid_structure: list) -> bool:
 
@@ -150,9 +150,9 @@ class ModelAI(Thread):
         if self.safety_order:
 
             buy_grid_structure: list = grid_structure["BUY"]
-            grid_separation_percentage: float = grid_structure["GRID_SEPARATION_PERCENTAGE"]
+            grid_separation_value: float = grid_structure["GRID_SEPARATION_VALUE"]
 
-            if (current_price * (1.0 + self.current_fee)) > buy_grid_structure[0][0]:
+            if (current_price + (grid_separation_value * 2.0)) > buy_grid_structure[0][0]:
                 return True
 
             new_sell_price: float = 0.0
@@ -167,8 +167,7 @@ class ModelAI(Thread):
                     break
 
             new_sell_price /= bought_grids
-            new_sell_price *= (1.0 + grid_separation_percentage)
-            new_sell_price *= (1.0 + self.current_fee)
+            new_sell_price += grid_separation_value
 
             grid_structure["SELL"][0] = new_sell_price
 
@@ -227,6 +226,8 @@ class ModelAI(Thread):
 
                 if not self.safety_order:
                     s_time_safety_order_trigger: float = timer()
+
+                continue
 
             if self.bought:
 
