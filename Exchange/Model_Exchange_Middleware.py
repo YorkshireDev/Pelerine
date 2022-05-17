@@ -229,7 +229,7 @@ class ModelExchangeMiddleware:
 
                             fee_structure: dict = await self.EXCHANGE.fetch_trading_fee(self.COIN_PAIR)
                             fee_structure = fee_structure[self.COIN_PAIR]
-                            fee: float = fee_structure["taker"]
+                            fee: float = fee_structure["taker"] * 1.1
 
                         else:
 
@@ -239,7 +239,7 @@ class ModelExchangeMiddleware:
                             fee_buy: float = float(fee_structure_buy["rate"])
                             fee_sell: float = float(fee_structure_sell["rate"])
 
-                            fee: float = max(fee_buy, fee_sell)
+                            fee: float = max(fee_buy, fee_sell) * 1.1
 
                         self.current_fee = fee
 
