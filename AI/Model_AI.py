@@ -137,8 +137,6 @@ class ModelAI(Thread):
         if self.EVENT_QUIT_REQUEST.is_set():
             return False
 
-        bought: bool = False
-
         for buy_grid in buy_grid_structure:
 
             if not buy_grid[1]:
@@ -146,9 +144,9 @@ class ModelAI(Thread):
                 if current_price <= buy_grid[0]:
 
                     buy_grid[1] = True
-                    bought = True
+                    return True
 
-        return bought
+        return False
 
     def __determine_sell(self, current_price: float, grid_structure: dict) -> bool:
 
