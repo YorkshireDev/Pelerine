@@ -150,6 +150,9 @@ class ModelAI(Thread):
 
     def __determine_sell(self, current_price: float, grid_structure: dict) -> bool:
 
+        if not grid_structure["BUY"][1][1]:
+            return False  # Require 2 grids bought as a minimum to sell
+
         sell_grid_price: float = grid_structure["SELL"][0]
 
         if current_price >= sell_grid_price:
