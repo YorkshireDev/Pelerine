@@ -158,12 +158,14 @@ class ModelAI(Thread):
             new_sell_price: float = 0.0
             bought_grids: float = 0.0
 
-            for buy_grid in buy_grid_structure:
+            for i in range(len(buy_grid_structure)):
 
-                if buy_grid[1]:
-                    new_sell_price += buy_grid[0]
+                if buy_grid_structure[i][1]:
+                    new_sell_price += buy_grid_structure[i][0]
                     bought_grids += 1.0
                 else:
+                    new_sell_price -= buy_grid_structure[i - 1][0]
+                    bought_grids -= 1.0
                     break
 
             new_sell_price /= bought_grids
@@ -193,6 +195,8 @@ class ModelAI(Thread):
         price_too_high: bool = False
 
         while not self.EVENT_MAIN.is_set():
+
+            print(grid_structure["BUY"][:10])
 
             # # # AI # # #
 
