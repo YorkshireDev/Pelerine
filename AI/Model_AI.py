@@ -200,13 +200,26 @@ class ModelAI(Thread):
         s_time_price_too_high: float = 0.0
         price_too_high: bool = False
 
+        previous_price: float = 0.0
+
         while not self.EVENT_MAIN.is_set():
 
-            print(grid_structure["BUY"][:10])
+            e_time_fee_min_request: float = timer() - s_time_fee_min_request
 
-            # # # AI # # #
+            if e_time_fee_min_request >= self.TIME_BETWEEN_FEE_REQUEST:
+
+                self.__get_fee_and_min_base_order_amount()
+                s_time_fee_min_request = timer()
 
             current_price: float = self.CONTROLLER_EXCHANGE_MIDDLEWARE.get_current_price()
+
+            if current_price == previous_price:
+                sleep(0.001)
+                continue
+            else:
+                previous_price = current_price
+
+            # # # AI # # #
 
             if not self.bought and current_price > grid_structure["BUY"][0][0]:
 
@@ -270,13 +283,6 @@ class ModelAI(Thread):
                     self.safety_order = False
 
             # # # AI # # #
-
-            e_time_fee_min_request: float = timer() - s_time_fee_min_request
-
-            if e_time_fee_min_request >= self.TIME_BETWEEN_FEE_REQUEST:
-
-                self.__get_fee_and_min_base_order_amount()
-                s_time_fee_min_request = timer()
 
             sleep(0.001)
 
