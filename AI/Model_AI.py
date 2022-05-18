@@ -152,24 +152,30 @@ class ModelAI(Thread):
             buy_grid_structure: list = grid_structure["BUY"]
             grid_separation_value: float = grid_structure["GRID_SEPARATION_VALUE"]
 
-            if (current_price + (grid_separation_value * 2.0)) > buy_grid_structure[0][0]:
+            if (current_price + grid_separation_value) > buy_grid_structure[0][0]:
                 return True
 
             new_sell_price: float = 0.0
-            bought_grids: float = 0.0
+            bought_grids: int = 0
 
             for i in range(len(buy_grid_structure)):
 
                 if buy_grid_structure[i][1]:
                     new_sell_price += buy_grid_structure[i][0]
-                    bought_grids += 1.0
+                    bought_grids += 1
                 else:
                     new_sell_price -= buy_grid_structure[i - 1][0]
-                    bought_grids -= 1.0
+                    bought_grids -= 1
                     break
 
-            new_sell_price /= bought_grids
-            new_sell_price += grid_separation_value
+            if bought_grids == 1:
+
+                new_sell_price = sell_grid_price
+
+            else:
+
+                new_sell_price /= float(bought_grids)
+                new_sell_price += grid_separation_value
 
             grid_structure["SELL"][0] = new_sell_price
 
