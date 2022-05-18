@@ -45,33 +45,41 @@ class ModelAI(Thread):
         self.current_minimum_base_order_amount: float = 0.0  # Minimum BASE purchasable by the exchange
         self.current_base_order_amount: float = 0.0  # The amount of BASE the AI will buy, always >= minimum base order amount
 
-    def has_bought(self):
+    def has_bought(self) -> bool:
 
         return self.bought
 
-    def __buy(self, amount: float):
+    def __buy(self, amount: float) -> bool:
 
-        async def __buy_async(x: float):
+        success: list = [False]
 
-            await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(True, x)
+        async def __buy_async(x: float, y: list):
+
+            y[0] = await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(True, x)
             self.event_submit_order.set()
 
-        self.EVENT_LOOP.create_task(__buy_async(amount))
+        self.EVENT_LOOP.create_task(__buy_async(amount, success))
 
         self.event_submit_order.wait()
         self.event_submit_order.clear()
 
-    def __sell(self, amount: float):
+        return success[0]
 
-        async def __sell_async(x: float):
+    def __sell(self, amount: float) -> bool:
 
-            await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(False, x, self.safety_order)
+        success: list = [False]
+
+        async def __sell_async(x: float, y: list):
+
+            y[0] = await self.CONTROLLER_EXCHANGE_MIDDLEWARE.submit_order(False, x, self.safety_order)
             self.event_submit_order.set()
 
-        self.EVENT_LOOP.create_task(__sell_async(amount))
+        self.EVENT_LOOP.create_task(__sell_async(amount, success))
 
         self.event_submit_order.wait()
         self.event_submit_order.clear()
+
+        return success[0]
 
     def __get_fee_and_min_base_order_amount(self):
 
@@ -246,10 +254,9 @@ class ModelAI(Thread):
 
             if self.__determine_buy(current_price, grid_structure["BUY"]):
 
-                self.__buy(self.current_base_order_amount)
-                self.bought = True
+                self.bought = self.__buy(self.current_base_order_amount)
 
-                if not self.safety_order:
+                if self.bought and not self.safety_order:
                     s_time_safety_order_trigger: float = timer()
 
                 continue
@@ -279,10 +286,13 @@ class ModelAI(Thread):
 
                 if self.__determine_sell(current_price, grid_structure):
 
-                    self.__sell(self.CONTROLLER_USER.get_balance()[0])
-                    grid_structure: dict = self.__calculate_grid_structure()
-                    self.bought = False
-                    self.safety_order = False
+                    sold: bool = self.__sell(self.CONTROLLER_USER.get_balance()[0])
+
+                    if sold:
+
+                        grid_structure: dict = self.__calculate_grid_structure()
+                        self.bought = False
+                        self.safety_order = False
 
             # # # AI # # #
 

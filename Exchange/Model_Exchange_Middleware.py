@@ -60,9 +60,10 @@ class ModelExchangeMiddleware:
         await self.__process_request(2, False)
         return self.current_price
 
-    async def submit_order(self, side: bool, amount: float, safety_order: bool):
+    async def submit_order(self, side: bool, amount: float, safety_order: bool) -> bool:
 
-        await self.__process_request(3, True, SIDE=side, AMOUNT=amount, SAFETY_ORDER=safety_order)
+        success: bool = await self.__process_request(3, True, SIDE=side, AMOUNT=amount, SAFETY_ORDER=safety_order)
+        return success
 
     async def close_exchange(self):
 
@@ -78,7 +79,7 @@ class ModelExchangeMiddleware:
         await self.__process_request(6, False)
         return self.minimum_base_order_amount
 
-    async def __process_request(self, request_id: int, no_retry: bool, **kwargs):
+    async def __process_request(self, request_id: int, no_retry: bool, **kwargs) -> bool:
 
         connection_successful = False
 
@@ -148,7 +149,7 @@ class ModelExchangeMiddleware:
                             quote_to_base: float = self.CONTROLLER_USER.get_balance()[1] / self.current_price
 
                             if quote_to_base < base_amount:
-                                return  # User does not have enough money to buy BASE currency so just return
+                                return False  # User does not have enough money to buy BASE currency so just return
 
                             if self.LIVE_TRADING:
 
@@ -229,7 +230,8 @@ class ModelExchangeMiddleware:
 
                             fee_structure: dict = await self.EXCHANGE.fetch_trading_fee(self.COIN_PAIR)
                             fee_structure = fee_structure[self.COIN_PAIR]
-                            fee: float = fee_structure["taker"] * 1.1
+
+                            fee: float = fee_structure["taker"]
 
                         else:
 
@@ -239,9 +241,9 @@ class ModelExchangeMiddleware:
                             fee_buy: float = float(fee_structure_buy["rate"])
                             fee_sell: float = float(fee_structure_sell["rate"])
 
-                            fee: float = max(fee_buy, fee_sell) * 1.1
+                            fee: float = max(fee_buy, fee_sell)
 
-                        self.current_fee = fee
+                        self.current_fee = fee * 1.1
 
                     case 6:
 
